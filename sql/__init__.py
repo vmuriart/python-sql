@@ -179,7 +179,7 @@ def format2numeric(query, params):
     ...     ('foo', 'bar'))
     ('SELECT * FROM table WHERE col1 = :0 AND col2 = :1', ('foo', 'bar'))
     '''
-    return (query % tuple(':%i' % i for i, _ in enumerate(params)), params)
+    return (query % tuple(':{0:d}'.format(i) for i, _ in enumerate(params)), params)
 
 
 class Query(object):
@@ -228,7 +228,7 @@ class WithQuery(Query):
             return ''
         recursive = (' RECURSIVE' if any(w.recursive for w in self.with_)
                      else '')
-        with_ = ('WITH%s ' % recursive
+        with_ = ('WITH{0!s} '.format(recursive)
                  + ', '.join(w.statement() for w in self.with_)
                  + ' ')
         return with_
@@ -294,15 +294,15 @@ class With(FromItem):
         super(With, self).__init__(**kwargs)
 
     def statement(self):
-        columns = (' (%s)' % ', '.join('"%s"' % c for c in self.columns)
+        columns = (' ({0!s})'.format(', '.join('"{0!s}"'.format(c) for c in self.columns))
                    if self.columns else '')
-        return '"%s"%s AS (%s)' % (self.alias, columns, self.query)
+        return '"{0!s}"{1!s} AS ({2!s})'.format(self.alias, columns, self.query)
 
     def statement_params(self):
         return self.query.params
 
     def __str__(self):
-        return '"%s"' % self.alias
+        return '"{0!s}"'.format(self.alias)
 
     @property
     def params(self):
@@ -365,22 +365,22 @@ class SelectQuery(WithQuery):
         if Flavor.get().limitstyle == 'limit':
             offset = ''
             if self.offset:
-                offset = ' OFFSET %s' % self.offset
+                offset = ' OFFSET {0!s}'.format(self.offset)
             limit = ''
             if self.limit is not None:
-                limit = ' LIMIT %s' % self.limit
+                limit = ' LIMIT {0!s}'.format(self.limit)
             elif self.offset:
                 max_limit = Flavor.get().max_limit
                 if max_limit:
-                    limit = ' LIMIT %s' % max_limit
+                    limit = ' LIMIT {0!s}'.format(max_limit)
             return limit + offset
         else:
             offset = ''
             if self.offset:
-                offset = ' OFFSET (%s) ROWS' % self.offset
+                offset = ' OFFSET ({0!s}) ROWS'.format(self.offset)
             fetch = ''
             if self.limit is not None:
-                fetch = ' FETCH FIRST (%s) ROWS ONLY' % self.limit
+                fetch = ' FETCH FIRST ({0!s}) ROWS ONLY'.format(self.limit)
             return offset + fetch
 
 
@@ -463,9 +463,9 @@ class Select(FromItem, SelectQuery):
     def _format_column(column):
         if isinstance(column, As):
             if Flavor.get().no_as:
-                return '%s %s' % (column.expression, column)
+                return '{0!s} {1!s}'.format(column.expression, column)
             else:
-                return '%s AS %s' % (column.expression, column)
+                return '{0!s} AS {1!s}'.format(column.expression, column)
         else:
             return str(column)
 
@@ -547,12 +547,12 @@ class Select(FromItem, SelectQuery):
             windows = [f.window for f in self._window_functions()]
             if windows:
                 window = ' WINDOW ' + ', '.join(
-                    '"%s" AS (%s)' % (w.alias, w) for w in windows)
+                    '"{0!s}" AS ({1!s})'.format(w.alias, w) for w in windows)
             for_ = ''
             if self.for_ is not None:
                 for_ = ' ' + ' '.join(map(str, self.for_))
             return (self._with_str()
-                    + 'SELECT %s FROM %s' % (columns, from_)
+                    + 'SELECT {0!s} FROM {1!s}'.format(columns, from_)
                     + where + group_by + having + window + self._order_by_str
                     + self._limit_offset_str + for_)
 
@@ -647,7 +647,7 @@ class Insert(WithQuery):
         if isinstance(value, Expression):
             return str(value)
         elif isinstance(value, Select):
-            return '(%s)' % value
+            return '({0!s})'.format(value)
         else:
             return param
 
@@ -657,7 +657,7 @@ class Insert(WithQuery):
             assert all(col.table == self.table for col in self.columns)
             columns = ' (' + ', '.join(map(str, self.columns)) + ')'
         if isinstance(self.values, Query):
-            values = ' %s' % str(self.values)
+            values = ' {0!s}'.format(str(self.values))
             # TODO manage DEFAULT
         elif self.values is None:
             values = ' DEFAULT VALUES'
@@ -666,7 +666,7 @@ class Insert(WithQuery):
             returning = ' RETURNING ' + ', '.join(map(str, self.returning))
         with AliasManager():
             return (self._with_str()
-                    + 'INSERT INTO %s' % self.table + columns
+                    + 'INSERT INTO {0!s}'.format(self.table) + columns
                     + values + returning)
 
     @property
@@ -723,11 +723,11 @@ class Update(Insert):
             from_ = ''
             if self.from_:
                 table = From([self.table])
-                from_ = ' FROM %s' % str(self.from_)
+                from_ = ' FROM {0!s}'.format(str(self.from_))
             else:
                 table = self.table
                 AliasManager.set(table, str(table)[1:-1])
-            values = ', '.join('%s = %s' % (c, self._format(v))
+            values = ', '.join('{0!s} = {1!s}'.format(c, self._format(v))
                                for c, v in zip(columns, self.values))
             where = ''
             if self.where:
@@ -736,7 +736,7 @@ class Update(Insert):
             if self.returning:
                 returning = ' RETURNING ' + ', '.join(map(str, self.returning))
             return (self._with_str()
-                    + 'UPDATE %s SET ' % table + values + from_
+                    + 'UPDATE {0!s} SET '.format(table) + values + from_
                     + where + returning)
 
     @property
@@ -813,7 +813,7 @@ class Delete(WithQuery):
             if self.returning:
                 returning = ' RETURNING ' + ', '.join(map(str, self.returning))
             return (self._with_str()
-                    + 'DELETE FROM%s %s' % (only, self.table)
+                    + 'DELETE FROM{0!s} {1!s}'.format(only, self.table)
                     + where + returning)
 
     @property
@@ -840,7 +840,7 @@ class CombiningQuery(FromItem, SelectQuery):
 
     def __str__(self):
         with AliasManager():
-            operator = ' %s %s' % (self._operator, 'ALL ' if self.all_ else '')
+            operator = ' {0!s} {1!s}'.format(self._operator, 'ALL ' if self.all_ else '')
             return (operator.join(map(str, self.queries)) + self._order_by_str
                     + self._limit_offset_str)
 
@@ -888,12 +888,12 @@ class Table(FromItem):
 
     def __str__(self):
         if self._database:
-            return '"%s"."%s"."%s"' % (
+            return '"{0!s}"."{1!s}"."{2!s}"'.format(
                 self._database, self._schema, self._name)
         elif self._schema:
-            return '"%s"."%s"' % (self._schema, self._name)
+            return '"{0!s}"."{1!s}"'.format(self._schema, self._name)
         else:
-            return '"%s"' % self._name
+            return '"{0!s}"'.format(self._name)
 
     @property
     def params(self):
@@ -968,10 +968,10 @@ class Join(FromItem):
         self._type_ = value
 
     def __str__(self):
-        join = '%s %s JOIN %s' % (From([self.left]), self.type_,
+        join = '{0!s} {1!s} JOIN {2!s}'.format(From([self.left]), self.type_,
                                   From([self.right]))
         if self.condition:
-            condition = ' ON %s' % self.condition
+            condition = ' ON {0!s}'.format(self.condition)
         else:
             condition = ''
         return join + condition
@@ -1056,7 +1056,7 @@ class Values(list, Query, FromItem):
                 return param
 
         return 'VALUES ' + ', '.join(
-            '(%s)' % ', '.join(map(format_, v))
+            '({0!s})'.format(', '.join(map(format_, v)))
             for v in self)
 
     @property
@@ -1290,7 +1290,7 @@ class As(Expression):
         self.output_name = output_name
 
     def __str__(self):
-        return '"%s"' % self.output_name
+        return '"{0!s}"'.format(self.output_name)
 
     @property
     def params(self):
@@ -1310,7 +1310,7 @@ class Cast(Expression):
             value = self.expression
         else:
             value = Flavor.get().param
-        return 'CAST(%s AS %s)' % (value, self.typename)
+        return 'CAST({0!s} AS {1!s})'.format(value, self.typename)
 
     @property
     def params(self):
@@ -1402,19 +1402,19 @@ class Window(object):
 
         def format(frame, direction):
             if frame is None:
-                return 'UNBOUNDED %s' % direction
+                return 'UNBOUNDED {0!s}'.format(direction)
             elif not frame:
                 return 'CURRENT ROW'
             elif frame < 0:
-                return '%s PRECEDING' % -frame
+                return '{0!s} PRECEDING'.format(-frame)
             elif frame > 0:
-                return '%s FOLLOWING' % frame
+                return '{0!s} FOLLOWING'.format(frame)
 
         frame = ''
         if self.frame:
             start = format(self.start, 'PRECEDING')
             end = format(self.end, 'FOLLOWING')
-            frame = ' %s BETWEEN %s AND %s' % (self.frame, start, end)
+            frame = ' {0!s} BETWEEN {1!s} AND {2!s}'.format(self.frame, start, end)
         return partition + order_by + frame
 
     @property
@@ -1450,8 +1450,8 @@ class Order(Expression):
 
     def __str__(self):
         if isinstance(self.expression, SelectQuery):
-            return '(%s) %s' % (self.expression, self._sql)
-        return '%s %s' % (self.expression, self._sql)
+            return '({0!s}) {1!s}'.format(self.expression, self._sql)
+        return '{0!s} {1!s}'.format(self.expression, self._sql)
 
     @property
     def params(self):
@@ -1478,8 +1478,8 @@ class NullOrder(Expression):
 
     def __str__(self):
         if not Flavor.get().null_ordering:
-            return '%s, %s' % (self._case, self.expression)
-        return '%s NULLS %s' % (self.expression, self._sql)
+            return '{0!s}, {1!s}'.format(self._case, self.expression)
+        return '{0!s} NULLS {1!s}'.format(self.expression, self._sql)
 
     @property
     def params(self):
@@ -1558,4 +1558,4 @@ class For(object):
         nowait = ''
         if self.nowait:
             nowait = ' NOWAIT'
-        return ('FOR %s' % self.type_) + tables + nowait
+        return ('FOR {0!s}'.format(self.type_)) + tables + nowait

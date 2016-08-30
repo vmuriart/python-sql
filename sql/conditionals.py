@@ -55,10 +55,10 @@ class Case(Conditional):
     def __str__(self):
         case = 'CASE '
         for cond, result in self.whens:
-            case += 'WHEN %s THEN %s ' % (
+            case += 'WHEN {0!s} THEN {1!s} '.format(
                 self._format(cond), self._format(result))
         if self.else_ is not None:
-            case += 'ELSE %s ' % self._format(self.else_)
+            case += 'ELSE {0!s} '.format(self._format(self.else_))
         case += 'END'
         return case
 
