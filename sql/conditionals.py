@@ -83,7 +83,7 @@ class Case(Conditional):
 
 
 class Coalesce(Conditional):
-    __slots__ = ('values')
+    __slots__ = 'values'
     _conditional = 'COALESCE'
 
     def __init__(self, *values):
@@ -91,7 +91,7 @@ class Coalesce(Conditional):
 
     def __str__(self):
         return (self._conditional
-            + '(' + ', '.join(map(self._format, self.values)) + ')')
+                + '(' + ', '.join(map(self._format, self.values)) + ')')
 
     @property
     def params(self):

@@ -29,7 +29,8 @@
 
 from sql import Expression, Window
 
-__all__ = ['Avg', 'BitAnd', 'BitOr', 'BoolAnd', 'BoolOr', 'Count', 'Every',
+__all__ = [
+    'Avg', 'BitAnd', 'BitOr', 'BoolAnd', 'BoolOr', 'Count', 'Every',
     'Max', 'Min', 'Stddev', 'Sum', 'Variance']
 
 
@@ -38,7 +39,7 @@ class Aggregate(Expression):
     _sql = ''
 
     def __init__(self, expression, distinct=False, within=None, filter_=None,
-            window=None):
+                 window=None):
         # TODO order_by
         super(Aggregate, self).__init__()
         self.expression = expression
@@ -95,7 +96,7 @@ class Aggregate(Expression):
         within = ''
         if self.within:
             within = (' WITHIN GROUP (ORDER BY %s)'
-                % ', '.join(map(str, self.within)))
+                      % ', '.join(map(str, self.within)))
         filter_ = ''
         if self.filter_:
             filter_ = ' FILTER (WHERE %s)' % self.filter_

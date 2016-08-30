@@ -31,7 +31,7 @@ from __future__ import division
 
 __version__ = '0.9'
 __all__ = ['Flavor', 'Table', 'Values', 'Literal', 'Column', 'Join',
-    'Asc', 'Desc', 'NullsFirst', 'NullsLast', 'format2numeric']
+           'Asc', 'Desc', 'NullsFirst', 'NullsLast', 'format2numeric']
 
 import string
 import warnings
@@ -76,8 +76,9 @@ class Flavor(object):
     '''
 
     def __init__(self, limitstyle='limit', max_limit=None, paramstyle='format',
-            ilike=False, no_as=False, no_boolean=False, null_ordering=True,
-            function_mapping=None):
+                 ilike=False, no_as=False, no_boolean=False,
+                 null_ordering=True,
+                 function_mapping=None):
         assert limitstyle in ['fetch', 'limit', 'rownum']
         self.limitstyle = limitstyle
         self.max_limit = max_limit
@@ -226,10 +227,10 @@ class WithQuery(Query):
         if not self.with_:
             return ''
         recursive = (' RECURSIVE' if any(w.recursive for w in self.with_)
-            else '')
+                     else '')
         with_ = ('WITH%s ' % recursive
-            + ', '.join(w.statement() for w in self.with_)
-            + ' ')
+                 + ', '.join(w.statement() for w in self.with_)
+                 + ' ')
         return with_
 
     def _with_params(self):
@@ -294,7 +295,7 @@ class With(FromItem):
 
     def statement(self):
         columns = (' (%s)' % ', '.join('"%s"' % c for c in self.columns)
-            if self.columns else '')
+                   if self.columns else '')
         return '"%s"%s AS (%s)' % (self.alias, columns, self.query)
 
     def statement_params(self):
@@ -385,10 +386,10 @@ class SelectQuery(WithQuery):
 
 class Select(FromItem, SelectQuery):
     __slots__ = ('_columns', '_where', '_group_by', '_having', '_for_',
-        'from_')
+                 'from_')
 
     def __init__(self, columns, from_=None, where=None, group_by=None,
-            having=None, for_=None, **kwargs):
+                 having=None, for_=None, **kwargs):
         self._columns = None
         self._where = None
         self._group_by = None
@@ -477,17 +478,17 @@ class Select(FromItem, SelectQuery):
             if isinstance(column, (WindowFunction, Aggregate)):
                 window_function = column
             elif (isinstance(column, As)
-                    and isinstance(column.expression,
-                        (WindowFunction, Aggregate))):
+                  and isinstance(column.expression,
+                                 (WindowFunction, Aggregate))):
                 window_function = column.expression
             if (window_function and window_function.window
-                    and window_function.window not in windows):
+                and window_function.window not in windows):
                 windows.add(window_function.window)
                 yield window_function
 
     def _rownum(self, func):
         aliases = [c.output_name if isinstance(c, As) else None
-            for c in self.columns]
+                   for c in self.columns]
 
         def columns(table):
             if aliases and all(aliases):
@@ -505,7 +506,7 @@ class Select(FromItem, SelectQuery):
             rnum = _rownum.as_('rnum')
             limitselect.columns += (rnum,)
             offsetselect = limitselect.select(*columns(limitselect),
-                where=rnum > self.offset)
+                                              where=rnum > self.offset)
             query = offsetselect
         else:
             query = limitselect
@@ -524,7 +525,7 @@ class Select(FromItem, SelectQuery):
 
     def __str__(self):
         if (Flavor.get().limitstyle == 'rownum'
-                and (self.limit is not None or self.offset is not None)):
+            and (self.limit is not None or self.offset is not None)):
             return self._rownum(str)
 
         with AliasManager():
@@ -551,14 +552,14 @@ class Select(FromItem, SelectQuery):
             if self.for_ is not None:
                 for_ = ' ' + ' '.join(map(str, self.for_))
             return (self._with_str()
-                + 'SELECT %s FROM %s' % (columns, from_)
-                + where + group_by + having + window + self._order_by_str
-                + self._limit_offset_str + for_)
+                    + 'SELECT %s FROM %s' % (columns, from_)
+                    + where + group_by + having + window + self._order_by_str
+                    + self._limit_offset_str + for_)
 
     @property
     def params(self):
         if (Flavor.get().limitstyle == 'rownum'
-                and (self.limit is not None or self.offset is not None)):
+            and (self.limit is not None or self.offset is not None)):
             return self._rownum(lambda q: q.params)
         p = []
         p.extend(self._with_params())
@@ -586,7 +587,7 @@ class Insert(WithQuery):
     __slots__ = ('_table', '_columns', '_values', '_returning')
 
     def __init__(self, table, columns=None, values=None, returning=None,
-            **kwargs):
+                 **kwargs):
         self._table = None
         self._columns = None
         self._values = None
@@ -665,8 +666,8 @@ class Insert(WithQuery):
             returning = ' RETURNING ' + ', '.join(map(str, self.returning))
         with AliasManager():
             return (self._with_str()
-                + 'INSERT INTO %s' % self.table + columns
-                + values + returning)
+                    + 'INSERT INTO %s' % self.table + columns
+                    + values + returning)
 
     @property
     def params(self):
@@ -684,9 +685,9 @@ class Update(Insert):
     __slots__ = ('_where', '_values', 'from_')
 
     def __init__(self, table, columns, values, from_=None, where=None,
-            returning=None, **kwargs):
+                 returning=None, **kwargs):
         super(Update, self).__init__(table, columns=columns, values=values,
-            returning=returning, **kwargs)
+                                     returning=returning, **kwargs)
         self._where = None
         self.from_ = From(from_) if from_ else None
         self.where = where
@@ -727,7 +728,7 @@ class Update(Insert):
                 table = self.table
                 AliasManager.set(table, str(table)[1:-1])
             values = ', '.join('%s = %s' % (c, self._format(v))
-                for c, v in zip(columns, self.values))
+                               for c, v in zip(columns, self.values))
             where = ''
             if self.where:
                 where = ' WHERE ' + str(self.where)
@@ -735,8 +736,8 @@ class Update(Insert):
             if self.returning:
                 returning = ' RETURNING ' + ', '.join(map(str, self.returning))
             return (self._with_str()
-                + 'UPDATE %s SET ' % table + values + from_
-                + where + returning)
+                    + 'UPDATE %s SET ' % table + values + from_
+                    + where + returning)
 
     @property
     def params(self):
@@ -761,7 +762,7 @@ class Delete(WithQuery):
     __slots__ = ('_table', '_where', '_returning', 'only')
 
     def __init__(self, table, only=False, using=None, where=None,
-            returning=None, **kwargs):
+                 returning=None, **kwargs):
         self._table = None
         self._where = None
         self._returning = None
@@ -812,8 +813,8 @@ class Delete(WithQuery):
             if self.returning:
                 returning = ' RETURNING ' + ', '.join(map(str, self.returning))
             return (self._with_str()
-                + 'DELETE FROM%s %s' % (only, self.table)
-                + where + returning)
+                    + 'DELETE FROM%s %s' % (only, self.table)
+                    + where + returning)
 
     @property
     def params(self):
@@ -841,7 +842,7 @@ class CombiningQuery(FromItem, SelectQuery):
         with AliasManager():
             operator = ' %s %s' % (self._operator, 'ALL ' if self.all_ else '')
             return (operator.join(map(str, self.queries)) + self._order_by_str
-                + self._limit_offset_str)
+                    + self._limit_offset_str)
 
     @property
     def params(self):
@@ -867,7 +868,7 @@ class Intersect(CombiningQuery):
 class Interesect(Intersect):
     def __init__(self, *args, **kwargs):
         warnings.warn('Interesect query is deprecated, use Intersect',
-            DeprecationWarning, stacklevel=2)
+                      DeprecationWarning, stacklevel=2)
         super(Interesect, self).__init__(*args, **kwargs)
 
 
@@ -900,17 +901,17 @@ class Table(FromItem):
 
     def insert(self, columns=None, values=None, returning=None, with_=None):
         return Insert(self, columns=columns, values=values,
-            returning=returning, with_=with_)
+                      returning=returning, with_=with_)
 
     def update(self, columns, values, from_=None, where=None, returning=None,
-            with_=None):
+               with_=None):
         return Update(self, columns=columns, values=values, from_=from_,
-            where=where, returning=returning, with_=with_)
+                      where=where, returning=returning, with_=with_)
 
     def delete(self, only=False, using=None, where=None, returning=None,
-            with_=None):
+               with_=None):
         return Delete(self, only=only, using=using, where=where,
-            returning=returning, with_=with_)
+                      returning=returning, with_=with_)
 
 
 class Join(FromItem):
@@ -963,12 +964,12 @@ class Join(FromItem):
     def type_(self, value):
         value = value.upper()
         assert value in ('INNER', 'LEFT', 'LEFT OUTER',
-            'RIGHT', 'RIGHT OUTER', 'FULL', 'FULL OUTER', 'CROSS')
+                         'RIGHT', 'RIGHT OUTER', 'FULL', 'FULL OUTER', 'CROSS')
         self._type_ = value
 
     def __str__(self):
         join = '%s %s JOIN %s' % (From([self.left]), self.type_,
-            From([self.right]))
+                                  From([self.right]))
         if self.condition:
             condition = ' ON %s' % self.condition
         else:
@@ -1010,20 +1011,21 @@ class From(list):
             alias = getattr(from_, 'alias', None)
             # TODO column_alias
             columns_definitions = getattr(from_, 'columns_definitions',
-                None)
+                                          None)
             if Flavor.get().no_as:
                 alias_template = ' "%s"'
             else:
                 alias_template = ' AS "%s"'
             # XXX find a better test for __getattr__ which returns Column
             if (alias and columns_definitions
-                    and not isinstance(columns_definitions, Column)):
+                and not isinstance(columns_definitions, Column)):
                 return (template + alias_template + ' (%s)') % (from_, alias,
-                    columns_definitions)
+                                                                columns_definitions)
             elif alias:
                 return (template + alias_template) % (from_, alias)
             else:
                 return template % from_
+
         return ', '.join(map(format, self))
 
     @property
@@ -1052,6 +1054,7 @@ class Values(list, Query, FromItem):
                 return str(value)
             else:
                 return param
+
         return 'VALUES ' + ', '.join(
             '(%s)' % ', '.join(map(format_, v))
             for v in self)
@@ -1229,17 +1232,19 @@ class Literal(Expression):
                 return ()
         return (self._value,)
 
+
 Null = None
 
 
 class _Rownum(Expression):
-
     def __str__(self):
         return 'ROWNUM'
 
     @property
     def params(self):
         return ()
+
+
 _rownum = _Rownum()
 
 
@@ -1319,7 +1324,7 @@ class Window(object):
     __slots__ = ('_partition', '_order_by', '_frame', '_start', '_end')
 
     def __init__(self, partition, order_by=None,
-            frame=None, start=None, end=0):
+                 frame=None, start=None, end=0):
         super(Window, self).__init__()
         self._partition = None
         self._order_by = None

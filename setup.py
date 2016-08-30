@@ -48,7 +48,7 @@ setup(
     name='python-sql',
     version=get_version(),
     description='Library to write SQL queries',
-    long_description=read('README'),
+    # long_description=read('README.md'),
     author='B2CK',
     author_email='info@b2ck.com',
     url='http://python-sql.tryton.org/',
@@ -65,6 +65,6 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     license='BSD',
-    test_suite='sql.tests',
+    # test_suite='sql.tests',
     use_2to3=True,
 )
