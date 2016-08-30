@@ -1,0 +1,11 @@
+# PyCharm
+.idea/
+
+*.py[co]
+docs/build
+dist
+.coverage
+.tox/
+.cache/
+*.egg-info/
+htmlcov/
