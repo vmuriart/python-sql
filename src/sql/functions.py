@@ -30,7 +30,8 @@ from itertools import chain
 
 from sql import Expression, Flavor, FromItem, Window
 
-__all__ = ['Abs', 'Cbrt', 'Ceil', 'Degrees', 'Div', 'Exp', 'Floor', 'Ln',
+__all__ = [
+    'Abs', 'Cbrt', 'Ceil', 'Degrees', 'Div', 'Exp', 'Floor', 'Ln',
     'Log', 'Mod', 'Pi', 'Power', 'Radians', 'Random', 'Round', 'SetSeed',
     'Sign', 'Sqrt', 'Trunc', 'WidthBucket',
     'Acos', 'Asin', 'Atan', 'Atan2', 'Cos', 'Cot', 'Sin', 'Tan',
@@ -45,11 +46,12 @@ __all__ = ['Abs', 'Cbrt', 'Ceil', 'Degrees', 'Div', 'Exp', 'Floor', 'Ln',
     'RowNumber', 'Rank', 'DenseRank', 'PercentRank', 'CumeDist', 'Ntile',
     'Lag', 'Lead', 'FirstValue', 'LastValue', 'NthValue']
 
+
 # Mathematical
 
 
 class Function(Expression, FromItem):
-    __slots__ = ('args', '_columns_definitions')
+    __slots__ = 'args', '_columns_definitions'
     table = ''
     name = ''
     _function = ''
@@ -61,7 +63,7 @@ class Function(Expression, FromItem):
     @property
     def columns_definitions(self):
         return ', '.join('"%s" %s' % (c, d)
-            for c, d in self._columns_definitions)
+                         for c, d in self._columns_definitions)
 
     @columns_definitions.setter
     def columns_definitions(self, value):
@@ -105,11 +107,9 @@ class FunctionKeyword(Function):
         Mapping = Flavor.get().function_mapping.get(self.__class__)
         if Mapping:
             return str(Mapping(*self.args))
-        return (self._function + '('
-            + ' '.join(chain(*zip(
-                        self._keywords,
-                        map(self._format, self.args))))[1:]
-            + ')')
+        return (self._function + '(' + ' '.join(
+            chain(*zip(self._keywords, map(self._format, self.args)))
+        )[1:] + ')')
 
 
 class FunctionNotCallable(Function):
@@ -222,6 +222,7 @@ class WidthBucket(Function):
     __slots__ = ()
     _function = 'WIDTH_BUCKET'
 
+
 # Trigonometric
 
 
@@ -263,6 +264,7 @@ class Sin(Function):
 class Tan(Function):
     __slots__ = ()
     _function = 'TAN'
+
 
 # String
 
@@ -327,6 +329,7 @@ class Trim(Function):
                 return param
             else:
                 return str(arg)
+
         return self._function + '(%s %s FROM %s)' % (
             self.position, format(self.characters), format(self.string))
 

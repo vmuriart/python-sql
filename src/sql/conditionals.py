@@ -28,7 +28,7 @@
 
 from sql import Expression, Flavor
 
-__all__ = ['Case', 'Coalesce', 'NullIf', 'Greatest', 'Least']
+__all__ = 'Case', 'Coalesce', 'NullIf', 'Greatest', 'Least'
 
 
 class Conditional(Expression):
@@ -46,7 +46,7 @@ class Conditional(Expression):
 
 
 class Case(Conditional):
-    __slots__ = ('whens', 'else_')
+    __slots__ = 'whens', 'else_'
 
     def __init__(self, *whens, **kwargs):
         self.whens = whens
@@ -83,15 +83,15 @@ class Case(Conditional):
 
 
 class Coalesce(Conditional):
-    __slots__ = ('values')
+    __slots__ = 'values'
     _conditional = 'COALESCE'
 
     def __init__(self, *values):
         self.values = values
 
     def __str__(self):
-        return (self._conditional
-            + '(' + ', '.join(map(self._format, self.values)) + ')')
+        return (self._conditional + '(' +
+                ', '.join(map(self._format, self.values)) + ')')
 
     @property
     def params(self):

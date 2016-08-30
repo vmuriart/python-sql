@@ -25,16 +25,19 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import warnings
 from array import array
 
 from sql import Expression, Select, CombiningQuery, Flavor, Null
 
-__all__ = ['And', 'Or', 'Not', 'Less', 'Greater', 'LessEqual', 'GreaterEqual',
+__all__ = [
+    'And', 'Or', 'Not', 'Less', 'Greater', 'LessEqual', 'GreaterEqual',
     'Equal', 'NotEqual', 'Add', 'Sub', 'Mul', 'Div', 'FloorDiv', 'Mod', 'Pow',
     'SquareRoot', 'CubeRoot', 'Factorial', 'Abs', 'BAnd', 'BOr', 'BXor',
     'BNot', 'LShift', 'RShift', 'Concat', 'Like', 'NotLike', 'ILike',
-    'NotILike', 'In', 'NotIn', 'Exists', 'Any', 'Some', 'All']
+    'NotILike', 'In', 'NotIn', 'Exists', 'Any', 'Some', 'All'
+]
 
 
 class Operator(Expression):
@@ -67,6 +70,7 @@ class Operator(Expression):
                 else:
                     params.append(operand)
             return params
+
         return tuple(convert(self._operands))
 
     def _format(self, operand, param=None):
@@ -78,7 +82,7 @@ class Operator(Expression):
             return '(%s)' % operand
         elif isinstance(operand, (list, tuple)):
             return '(' + ', '.join(self._format(o, param)
-                for o in operand) + ')'
+                                   for o in operand) + ')'
         elif isinstance(operand, array):
             return '(' + ', '.join((param,) * len(operand)) + ')'
         else:
@@ -109,14 +113,14 @@ class UnaryOperator(Operator):
 
     @property
     def _operands(self):
-        return (self.operand,)
+        return self.operand,
 
     def __str__(self):
         return '(%s %s)' % (self._operator, self._format(self.operand))
 
 
 class BinaryOperator(Operator):
-    __slots__ = ('left', 'right')
+    __slots__ = 'left', 'right'
     _operator = ''
 
     def __init__(self, left, right):
@@ -125,12 +129,12 @@ class BinaryOperator(Operator):
 
     @property
     def _operands(self):
-        return (self.left, self.right)
+        return self.left, self.right
 
     def __str__(self):
         left, right = self._operands
         return '(%s %s %s)' % (self._format(left), self._operator,
-            self._format(right))
+                               self._format(right))
 
     def __invert__(self):
         return _INVERT[self.__class__](self.left, self.right)
@@ -200,9 +204,9 @@ class Equal(BinaryOperator):
     @property
     def _operands(self):
         if self.left is Null:
-            return (self.right,)
+            return self.right,
         elif self.right is Null:
-            return (self.left,)
+            return self.left,
         return super(Equal, self)._operands
 
     def __str__(self):
@@ -252,7 +256,7 @@ class FloorDiv(BinaryOperator):
 
     def __init__(self, left, right):
         warnings.warn('FloorDiv operator is deprecated, use Div function',
-            DeprecationWarning, stacklevel=2)
+                      DeprecationWarning, stacklevel=2)
         super(FloorDiv, self).__init__(left, right)
 
 
@@ -367,6 +371,7 @@ class NotILike(ILike):
         else:
             return 'NOT LIKE'
 
+
 # TODO SIMILAR
 
 
@@ -389,6 +394,7 @@ class Any(UnaryOperator):
     __slots__ = ()
     _operator = 'ANY'
 
+
 Some = Any
 
 
@@ -410,4 +416,4 @@ _INVERT = {
     NotILike: ILike,
     In: NotIn,
     NotIn: In,
-    }
+}
