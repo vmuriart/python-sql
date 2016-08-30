@@ -91,17 +91,18 @@ class Aggregate(Expression):
 
     def __str__(self):
         quantifier = 'DISTINCT ' if self.distinct else ''
-        aggregate = '%s(%s%s)' % (self._sql, quantifier, self.expression)
+        aggregate = '{0!s}({1!s}{2!s})'.format(
+            self._sql, quantifier, self.expression)
         within = ''
         if self.within:
-            within = (' WITHIN GROUP (ORDER BY %s)'
-                      % ', '.join(map(str, self.within)))
+            within = ' WITHIN GROUP (ORDER BY {0!s})'.format(
+                ', '.join(map(str, self.within)))
         filter_ = ''
         if self.filter_:
-            filter_ = ' FILTER (WHERE %s)' % self.filter_
+            filter_ = ' FILTER (WHERE {0!s})'.format(self.filter_)
         window = ''
         if self.window:
-            window = ' OVER "%s"' % self.window.alias
+            window = ' OVER "{0!s}"'.format(self.window.alias)
         return aggregate + within + filter_ + window
 
     @property

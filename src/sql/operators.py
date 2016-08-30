@@ -79,7 +79,7 @@ class Operator(Expression):
         if isinstance(operand, Expression):
             return str(operand)
         elif isinstance(operand, (Select, CombiningQuery)):
-            return '(%s)' % operand
+            return '({0!s})'.format(operand)
         elif isinstance(operand, (list, tuple)):
             return '(' + ', '.join(self._format(o, param)
                                    for o in operand) + ')'
@@ -116,7 +116,8 @@ class UnaryOperator(Operator):
         return self.operand,
 
     def __str__(self):
-        return '(%s %s)' % (self._operator, self._format(self.operand))
+        return '({0!s} {1!s})'.format(
+            self._operator, self._format(self.operand))
 
 
 class BinaryOperator(Operator):
@@ -133,8 +134,8 @@ class BinaryOperator(Operator):
 
     def __str__(self):
         left, right = self._operands
-        return '(%s %s %s)' % (self._format(left), self._operator,
-                               self._format(right))
+        return '({0!s} {1!s} {2!s})'.format(
+            self._format(left), self._operator, self._format(right))
 
     def __invert__(self):
         return _INVERT[self.__class__](self.left, self.right)
@@ -149,7 +150,8 @@ class NaryOperator(list, Operator):
         return self
 
     def __str__(self):
-        return '(' + (' %s ' % self._operator).join(map(str, self)) + ')'
+        return '(' + (' {0!s} '.format(self._operator)).join(
+            map(str, self)) + ')'
 
 
 class And(NaryOperator):
@@ -211,9 +213,9 @@ class Equal(BinaryOperator):
 
     def __str__(self):
         if self.left is Null:
-            return '(%s IS NULL)' % self.right
+            return '({0!s} IS NULL)'.format(self.right)
         elif self.right is Null:
-            return '(%s IS NULL)' % self.left
+            return '({0!s} IS NULL)'.format(self.left)
         return super(Equal, self).__str__()
 
 
@@ -223,9 +225,9 @@ class NotEqual(Equal):
 
     def __str__(self):
         if self.left is Null:
-            return '(%s IS NOT NULL)' % self.right
+            return '({0!s} IS NOT NULL)'.format(self.right)
         elif self.right is Null:
-            return '(%s IS NOT NULL)' % self.left
+            return '({0!s} IS NOT NULL)'.format(self.left)
         return super(Equal, self).__str__()
 
 
