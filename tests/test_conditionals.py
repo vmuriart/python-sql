@@ -37,39 +37,33 @@ class TestConditionals(unittest.TestCase):
 
     def test_case(self):
         case = Case((self.table.c1, 'foo'),
-            (self.table.c2, 'bar'),
-            else_=self.table.c3)
-        self.assertEqual(str(case),
-            'CASE WHEN "c1" THEN %s '
-            'WHEN "c2" THEN %s '
-            'ELSE "c3" END')
-        self.assertEqual(case.params, ('foo', 'bar'))
+                    (self.table.c2, 'bar'),
+                    else_=self.table.c3)
+        assert str(case) == 'CASE WHEN "c1" THEN %s WHEN "c2" THEN %s ELSE "c3" END'
+        assert case.params == ('foo', 'bar')
 
     def test_case_no_expression(self):
         case = Case((True, self.table.c1), (self.table.c2, False),
-            else_=False)
-        self.assertEqual(str(case),
-            'CASE WHEN %s THEN "c1" '
-            'WHEN "c2" THEN %s '
-            'ELSE %s END')
-        self.assertEqual(case.params, (True, False, False))
+                    else_=False)
+        assert str(case) == 'CASE WHEN %s THEN "c1" WHEN "c2" THEN %s ELSE %s END'
+        assert case.params == (True, False, False)
 
     def test_coalesce(self):
         coalesce = Coalesce(self.table.c1, self.table.c2, 'foo')
-        self.assertEqual(str(coalesce), 'COALESCE("c1", "c2", %s)')
-        self.assertEqual(coalesce.params, ('foo',))
+        assert str(coalesce) == 'COALESCE("c1", "c2", %s)'
+        assert coalesce.params == ('foo',)
 
     def test_nullif(self):
         nullif = NullIf(self.table.c1, 'foo')
-        self.assertEqual(str(nullif), 'NULLIF("c1", %s)')
-        self.assertEqual(nullif.params, ('foo',))
+        assert str(nullif) == 'NULLIF("c1", %s)'
+        assert nullif.params == ('foo',)
 
     def test_greatest(self):
         greatest = Greatest(self.table.c1, self.table.c2, 'foo')
-        self.assertEqual(str(greatest), 'GREATEST("c1", "c2", %s)')
-        self.assertEqual(greatest.params, ('foo',))
+        assert str(greatest) == 'GREATEST("c1", "c2", %s)'
+        assert greatest.params == ('foo',)
 
     def test_least(self):
         least = Least(self.table.c1, self.table.c2, 'foo')
-        self.assertEqual(str(least), 'LEAST("c1", "c2", %s)')
-        self.assertEqual(least.params, ('foo',))
+        assert str(least) == 'LEAST("c1", "c2", %s)'
+        assert least.params == ('foo',)

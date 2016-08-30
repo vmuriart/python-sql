@@ -34,23 +34,22 @@ from sql import Values
 class TestValues(unittest.TestCase):
     def test_single_values(self):
         values = Values([[1]])
-        self.assertEqual(str(values), 'VALUES (%s)')
-        self.assertEqual(values.params, (1,))
+        assert str(values) == 'VALUES (%s)'
+        assert values.params == (1,)
 
     def test_many_values(self):
         values = Values([[1, 2], [3, 4]])
-        self.assertEqual(str(values), 'VALUES (%s, %s), (%s, %s)')
-        self.assertEqual(values.params, (1, 2, 3, 4))
+        assert str(values) == 'VALUES (%s, %s), (%s, %s)'
+        assert values.params == (1, 2, 3, 4)
 
     def test_select(self):
         values = Values([[1], [2], [3]])
         query = values.select()
-        self.assertEqual(str(query),
-            'SELECT * FROM (VALUES (%s), (%s), (%s)) AS "a"')
-        self.assertEqual(query.params, (1, 2, 3))
+        assert str(query) == 'SELECT * FROM (VALUES (%s), (%s), (%s)) AS "a"'
+        assert query.params == (1, 2, 3)
 
     def test_union(self):
         values = Values([[1]])
         values |= Values([[2]])
-        self.assertEqual(str(values), 'VALUES (%s) UNION VALUES (%s)')
-        self.assertEqual(values.params, (1, 2))
+        assert str(values) == 'VALUES (%s) UNION VALUES (%s)'
+        assert values.params == (1, 2)

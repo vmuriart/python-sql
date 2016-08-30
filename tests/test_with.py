@@ -37,40 +37,29 @@ class TestWith(unittest.TestCase):
     def test_with(self):
         with AliasManager():
             simple = With(query=self.table.select(self.table.id,
-                    where=self.table.id == 1))
+                                                  where=self.table.id == 1))
 
-            self.assertEqual(simple.statement(),
-                '"a" AS ('
-                'SELECT "b"."id" FROM "t" AS "b" WHERE ("b"."id" = %s)'
-                ')')
-            self.assertEqual(simple.statement_params(), (1,))
+            assert simple.statement() == '"a" AS (SELECT "b"."id" FROM "t" AS "b" WHERE ("b"."id" = %s))'
+            assert simple.statement_params() == (1,)
 
     def test_with_columns(self):
         with AliasManager():
             second = With('a', query=self.table.select(self.table.a))
 
-            self.assertEqual(second.statement(),
-                '"a" ("a") AS ('
-                'SELECT "b"."a" FROM "t" AS "b"'
-                ')')
-            self.assertEqual(second.statement_params(), ())
+            assert second.statement() == '"a" ("a") AS (SELECT "b"."a" FROM "t" AS "b")'
+            assert second.statement_params() == ()
 
     def test_with_query(self):
         with AliasManager():
             simple = With()
             simple.query = self.table.select(self.table.id,
-                where=self.table.id == 1)
+                                             where=self.table.id == 1)
             second = With()
             second.query = simple.select()
 
             wq = WithQuery(with_=[simple, second])
-            self.assertEqual(wq._with_str(),
-                'WITH "a" AS ('
-                'SELECT "b"."id" FROM "t" AS "b" WHERE ("b"."id" = %s)'
-                '), "c" AS ('
-                'SELECT * FROM "a" AS "a"'
-                ') ')
-            self.assertEqual(wq._with_params(), (1,))
+            assert wq._with_str() == 'WITH "a" AS (SELECT "b"."id" FROM "t" AS "b" WHERE ("b"."id" = %s)), "c" AS (SELECT * FROM "a" AS "a") '
+            assert wq._with_params() == (1,)
 
     def test_recursive(self):
         upto10 = With('n', recursive=True)
@@ -81,10 +70,5 @@ class TestWith(unittest.TestCase):
         upto10.query.all_ = True
 
         q = upto10.select(with_=[upto10])
-        self.assertEqual(str(q),
-            'WITH RECURSIVE "a" ("n") AS ('
-            'VALUES (%s) '
-            'UNION ALL '
-            'SELECT ("a"."n" + %s) FROM "a" AS "a" WHERE ("a"."n" < %s)'
-            ') SELECT * FROM "a" AS "a"')
-        self.assertEqual(q.params, (1, 1, 100))
+        assert str(q) == 'WITH RECURSIVE "a" ("n") AS (VALUES (%s) UNION ALL SELECT ("a"."n" + %s) FROM "a" AS "a" WHERE ("a"."n" < %s)) SELECT * FROM "a" AS "a"'
+        assert q.params == (1, 1, 100)

@@ -38,13 +38,12 @@ class TestJoin(unittest.TestCase):
         t2 = Table('t2')
         join = Join(t1, t2)
         with AliasManager():
-            self.assertEqual(str(join), '"t1" AS "a" INNER JOIN "t2" AS "b"')
-            self.assertEqual(join.params, ())
+            assert str(join) == '"t1" AS "a" INNER JOIN "t2" AS "b"'
+            assert join.params == ()
 
         join.condition = t1.c == t2.c
         with AliasManager():
-            self.assertEqual(str(join),
-                '"t1" AS "a" INNER JOIN "t2" AS "b" ON ("a"."c" = "b"."c")')
+            assert str(join) == '"t1" AS "a" INNER JOIN "t2" AS "b" ON ("a"."c" = "b"."c")'
 
     def test_join_subselect(self):
         t1 = Table('t1')
@@ -53,14 +52,12 @@ class TestJoin(unittest.TestCase):
         join = Join(t1, select)
         join.condition = t1.c == select.c
         with AliasManager():
-            self.assertEqual(str(join),
-                '"t1" AS "a" INNER JOIN (SELECT * FROM "t2" AS "c") AS "b" '
-                'ON ("a"."c" = "b"."c")')
-            self.assertEqual(join.params, ())
+            assert str(join) == '"t1" AS "a" INNER JOIN (SELECT * FROM "t2" AS "c") AS "b" ON ("a"."c" = "b"."c")'
+            assert join.params == ()
 
     def test_join_function(self):
         t1 = Table('t1')
         join = Join(t1, Now())
         with AliasManager():
-            self.assertEqual(str(join), '"t1" AS "a" INNER JOIN NOW() AS "b"')
-            self.assertEqual(join.params, ())
+            assert str(join) == '"t1" AS "a" INNER JOIN NOW() AS "b"'
+            assert join.params == ()

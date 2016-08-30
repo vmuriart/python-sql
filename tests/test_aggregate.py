@@ -37,28 +37,28 @@ class TestAggregate(unittest.TestCase):
 
     def test_avg(self):
         avg = Avg(self.table.c)
-        self.assertEqual(str(avg), 'AVG("c")')
+        assert str(avg) == 'AVG("c")'
 
         avg = Avg(self.table.a + self.table.b)
-        self.assertEqual(str(avg), 'AVG(("a" + "b"))')
+        assert str(avg) == 'AVG(("a" + "b"))'
 
     def test_within(self):
         avg = Avg(self.table.a, within=self.table.b)
-        self.assertEqual(str(avg), 'AVG("a") WITHIN GROUP (ORDER BY "b")')
-        self.assertEqual(avg.params, ())
+        assert str(avg) == 'AVG("a") WITHIN GROUP (ORDER BY "b")'
+        assert avg.params == ()
 
     def test_filter(self):
         avg = Avg(self.table.a, filter_=self.table.a > 0)
-        self.assertEqual(str(avg), 'AVG("a") FILTER (WHERE ("a" > %s))')
-        self.assertEqual(avg.params, (0,))
+        assert str(avg) == 'AVG("a") FILTER (WHERE ("a" > %s))'
+        assert avg.params == (0,)
 
     def test_window(self):
         avg = Avg(self.table.c, window=Window([]))
         with AliasManager():
-            self.assertEqual(str(avg), 'AVG("a"."c") OVER "b"')
-        self.assertEqual(avg.params, ())
+            assert str(avg) == 'AVG("a"."c") OVER "b"'
+        assert avg.params == ()
 
     def test_distinct(self):
         avg = Avg(self.table.c, distinct=True)
-        self.assertEqual(str(avg), 'AVG(DISTINCT "c")')
-        self.assertEqual(avg.params, ())
+        assert str(avg) == 'AVG(DISTINCT "c")'
+        assert avg.params == ()

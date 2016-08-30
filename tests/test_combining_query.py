@@ -38,36 +38,26 @@ class TestUnion(unittest.TestCase):
 
     def test_union2(self):
         query = Union(self.q1, self.q2)
-        self.assertEqual(str(query),
-            'SELECT * FROM "t1" AS "a" UNION SELECT * FROM "t2" AS "b"')
-        self.assertEqual(query.params, ())
+        assert str(query) == 'SELECT * FROM "t1" AS "a" UNION SELECT * FROM "t2" AS "b"'
+        assert query.params == ()
 
         query = self.q1 | self.q2
-        self.assertEqual(str(query),
-            'SELECT * FROM "t1" AS "a" UNION SELECT * FROM "t2" AS "b"')
-        self.assertEqual(query.params, ())
+        assert str(query) == 'SELECT * FROM "t1" AS "a" UNION SELECT * FROM "t2" AS "b"'
+        assert query.params == ()
 
     def test_union3(self):
         query = Union(self.q1, self.q2, self.q3)
-        self.assertEqual(str(query),
-            'SELECT * FROM "t1" AS "a" UNION SELECT * FROM "t2" AS "b" '
-            'UNION SELECT * FROM "t3" AS "c"')
-        self.assertEqual(query.params, ())
+        assert str(query) == 'SELECT * FROM "t1" AS "a" UNION SELECT * FROM "t2" AS "b" UNION SELECT * FROM "t3" AS "c"'
+        assert query.params == ()
 
         query = Union(Union(self.q1, self.q2), self.q3)
-        self.assertEqual(str(query),
-            'SELECT * FROM "t1" AS "a" UNION SELECT * FROM "t2" AS "b" '
-            'UNION SELECT * FROM "t3" AS "c"')
-        self.assertEqual(query.params, ())
+        assert str(query) == 'SELECT * FROM "t1" AS "a" UNION SELECT * FROM "t2" AS "b" UNION SELECT * FROM "t3" AS "c"'
+        assert query.params == ()
 
         query = Union(self.q1, Union(self.q2, self.q3))
-        self.assertEqual(str(query),
-            'SELECT * FROM "t1" AS "a" UNION SELECT * FROM "t2" AS "b" '
-            'UNION SELECT * FROM "t3" AS "c"')
-        self.assertEqual(query.params, ())
+        assert str(query) == 'SELECT * FROM "t1" AS "a" UNION SELECT * FROM "t2" AS "b" UNION SELECT * FROM "t3" AS "c"'
+        assert query.params == ()
 
         query = self.q1 | self.q2 | self.q3
-        self.assertEqual(str(query),
-            'SELECT * FROM "t1" AS "a" UNION SELECT * FROM "t2" AS "b" '
-            'UNION SELECT * FROM "t3" AS "c"')
-        self.assertEqual(query.params, ())
+        assert str(query) == 'SELECT * FROM "t1" AS "a" UNION SELECT * FROM "t2" AS "b" UNION SELECT * FROM "t3" AS "c"'
+        assert query.params == ()

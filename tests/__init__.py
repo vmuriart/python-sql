@@ -54,8 +54,9 @@ def additional_tests():
     for mod in (sql,):
         suite.addTest(doctest.DocTestSuite(mod))
     if os.path.isfile(readme):
-        suite.addTest(doctest.DocFileSuite(readme, module_relative=False,
-                tearDown=lambda t: sql.Flavor.set(sql.Flavor())))
+        suite.addTest(doctest.DocFileSuite(
+            readme, module_relative=False,
+            tearDown=lambda t: sql.Flavor.set(sql.Flavor())))
     return suite
 
 
@@ -64,7 +65,8 @@ def main():
     runner = unittest.TextTestRunner()
     return runner.run(suite)
 
+
 if __name__ == '__main__':
     sys.path.insert(0, os.path.dirname(os.path.dirname(
-                os.path.dirname(os.path.abspath(__file__)))))
+        os.path.dirname(os.path.abspath(__file__)))))
     sys.exit(not main().wasSuccessful())

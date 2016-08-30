@@ -32,55 +32,44 @@ from sql import Window, Table
 
 
 class TestWindow(unittest.TestCase):
-
     def test_window(self):
         t = Table('t')
         window = Window([t.c1, t.c2])
 
-        self.assertEqual(str(window), 'PARTITION BY "c1", "c2"')
-        self.assertEqual(window.params, ())
+        assert str(window) == 'PARTITION BY "c1", "c2"'
+        assert window.params == ()
 
     def test_window_order(self):
         t = Table('t')
         window = Window([t.c], order_by=t.c)
 
-        self.assertEqual(str(window), 'PARTITION BY "c" ORDER BY "c"')
-        self.assertEqual(window.params, ())
+        assert str(window) == 'PARTITION BY "c" ORDER BY "c"'
+        assert window.params == ()
 
     def test_window_range(self):
         t = Table('t')
         window = Window([t.c], frame='RANGE')
 
-        self.assertEqual(str(window),
-            'PARTITION BY "c" RANGE '
-            'BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW')
-        self.assertEqual(window.params, ())
+        assert str(window) == 'PARTITION BY "c" RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW'
+        assert window.params == ()
 
         window.start = -1
-        self.assertEqual(str(window),
-            'PARTITION BY "c" RANGE '
-            'BETWEEN 1 PRECEDING AND CURRENT ROW')
-        self.assertEqual(window.params, ())
+        assert str(window) == 'PARTITION BY "c" RANGE BETWEEN 1 PRECEDING AND CURRENT ROW'
+        assert window.params == ()
 
         window.start = 0
         window.end = 1
-        self.assertEqual(str(window),
-            'PARTITION BY "c" RANGE '
-            'BETWEEN CURRENT ROW AND 1 FOLLOWING')
-        self.assertEqual(window.params, ())
+        assert str(window) == 'PARTITION BY "c" RANGE BETWEEN CURRENT ROW AND 1 FOLLOWING'
+        assert window.params == ()
 
         window.start = 1
         window.end = None
-        self.assertEqual(str(window),
-            'PARTITION BY "c" RANGE '
-            'BETWEEN 1 FOLLOWING AND UNBOUNDED FOLLOWING')
-        self.assertEqual(window.params, ())
+        assert str(window) == 'PARTITION BY "c" RANGE BETWEEN 1 FOLLOWING AND UNBOUNDED FOLLOWING'
+        assert window.params == ()
 
     def test_window_rows(self):
         t = Table('t')
         window = Window([t.c], frame='ROWS')
 
-        self.assertEqual(str(window),
-            'PARTITION BY "c" ROWS '
-            'BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW')
-        self.assertEqual(window.params, ())
+        assert str(window) == 'PARTITION BY "c" ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW'
+        assert window.params == ()

@@ -33,15 +33,14 @@ from sql import Table
 
 
 class TestTable(unittest.TestCase):
-
     def test_name(self):
         t = Table('mytable')
-        self.assertEqual(str(t), '"mytable"')
+        assert str(t) == '"mytable"'
 
     def test_schema(self):
         t = Table('mytable', schema='myschema')
-        self.assertEqual(str(t), '"myschema"."mytable"')
+        assert str(t) == '"myschema"."mytable"'
 
     def test_database(self):
         t = Table('mytable', database='mydatabase', schema='myschema')
-        self.assertEqual(str(t), '"mydatabase"."myschema"."mytable"')
+        assert str(t) == '"mydatabase"."myschema"."mytable"'

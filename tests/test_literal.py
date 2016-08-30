@@ -34,22 +34,22 @@ from sql import Literal, Flavor
 class TestLiteral(unittest.TestCase):
     def test_literal(self):
         literal = Literal(1)
-        self.assertEqual(str(literal), '%s')
-        self.assertEqual(literal.params, (1,))
-        self.assertEqual(literal.value, 1)
+        assert str(literal) == '%s'
+        assert literal.params == (1,)
+        assert literal.value == 1
 
     def test_no_boolean(self):
         true = Literal(True)
         false = Literal(False)
-        self.assertEqual(str(true), '%s')
-        self.assertEqual(true.params, (True,))
-        self.assertEqual(str(false), '%s')
-        self.assertEqual(false.params, (False,))
+        assert str(true) == '%s'
+        assert true.params == (True,)
+        assert str(false) == '%s'
+        assert false.params == (False,)
         try:
             Flavor.set(Flavor(no_boolean=True))
-            self.assertEqual(str(true), '(1 = 1)')
-            self.assertEqual(str(false), '(1 != 1)')
-            self.assertEqual(true.params, ())
-            self.assertEqual(false.params, ())
+            assert str(true) == '(1 = 1)'
+            assert str(false) == '(1 != 1)'
+            assert true.params == ()
+            assert false.params == ()
         finally:
             Flavor.set(Flavor())

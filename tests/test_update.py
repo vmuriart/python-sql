@@ -36,22 +36,19 @@ class TestUpdate(unittest.TestCase):
 
     def test_update1(self):
         query = self.table.update([self.table.c], ['foo'])
-        self.assertEqual(str(query), 'UPDATE "t" SET "c" = %s')
-        self.assertEqual(query.params, ('foo',))
+        assert str(query) == 'UPDATE "t" SET "c" = %s'
+        assert query.params == ('foo',)
 
         query.where = (self.table.b == Literal(True))
-        self.assertEqual(str(query),
-            'UPDATE "t" SET "c" = %s WHERE ("t"."b" = %s)')
-        self.assertEqual(query.params, ('foo', True))
+        assert str(query) == 'UPDATE "t" SET "c" = %s WHERE ("t"."b" = %s)'
+        assert query.params == ('foo', True)
 
     def test_update2(self):
         t1 = Table('t1')
         t2 = Table('t2')
         query = t1.update([t1.c], ['foo'], from_=[t2], where=(t1.c == t2.c))
-        self.assertEqual(str(query),
-            'UPDATE "t1" AS "b" SET "c" = %s FROM "t2" AS "a" '
-            'WHERE ("b"."c" = "a"."c")')
-        self.assertEqual(query.params, ('foo',))
+        assert str(query) == 'UPDATE "t1" AS "b" SET "c" = %s FROM "t2" AS "a" WHERE ("b"."c" = "a"."c")'
+        assert query.params == ('foo',)
 
     def test_update_subselect(self):
         t1 = Table('t1')
@@ -59,17 +56,14 @@ class TestUpdate(unittest.TestCase):
         query_list = t1.update([t1.c], [t2.select(t2.c, where=t2.i == t1.i)])
         query_nolist = t1.update([t1.c], t2.select(t2.c, where=t2.i == t1.i))
         for query in [query_list, query_nolist]:
-            self.assertEqual(str(query),
-                'UPDATE "t1" SET "c" = ('
-                'SELECT "b"."c" FROM "t2" AS "b" WHERE ("b"."i" = "t1"."i"))')
-            self.assertEqual(query.params, ())
+            assert str(query) == 'UPDATE "t1" SET "c" = (SELECT "b"."c" FROM "t2" AS "b" WHERE ("b"."i" = "t1"."i"))'
+            assert query.params == ()
 
     def test_update_returning(self):
         query = self.table.update([self.table.c], ['foo'],
-            returning=[self.table.c])
-        self.assertEqual(str(query),
-            'UPDATE "t" SET "c" = %s RETURNING "t"."c"')
-        self.assertEqual(query.params, ('foo',))
+                                  returning=[self.table.c])
+        assert str(query) == 'UPDATE "t" SET "c" = %s RETURNING "t"."c"'
+        assert query.params == ('foo',)
 
     def test_with(self):
         t1 = Table('t1')
@@ -79,8 +73,5 @@ class TestUpdate(unittest.TestCase):
             [self.table.c2],
             with_=[w],
             values=[w.select(w.c3, where=w.c4 == 2)])
-        self.assertEqual(str(query),
-            'WITH "b" AS (SELECT "c"."c1" FROM "t1" AS "c") '
-            'UPDATE "t" SET "c2" = (SELECT "b"."c3" FROM "b" AS "b" '
-            'WHERE ("b"."c4" = %s))')
-        self.assertEqual(query.params, (2,))
+        assert str(query) == 'WITH "b" AS (SELECT "c"."c1" FROM "t1" AS "c") UPDATE "t" SET "c2" = (SELECT "b"."c3" FROM "b" AS "b" WHERE ("b"."c4" = %s))'
+        assert query.params == (2,)

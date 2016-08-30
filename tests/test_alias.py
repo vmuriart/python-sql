@@ -33,7 +33,6 @@ from sql import AliasManager, Table
 
 
 class TestAliasManager(unittest.TestCase):
-
     def setUp(self):
         self.synchro = threading.Event()
         self.succeed1 = threading.Event()
@@ -50,8 +49,8 @@ class TestAliasManager(unittest.TestCase):
                 a1 = AliasManager.get(self.t1)
                 a2 = AliasManager.get(self.t2)
                 self.synchro.wait()
-                self.assertEqual(a1, AliasManager.get(self.t1))
-                self.assertEqual(a2, AliasManager.get(self.t2))
+                assert a1 == AliasManager.get(self.t1)
+                assert a2 == AliasManager.get(self.t2)
                 self.succeed1.set()
             return
         except Exception:
@@ -65,8 +64,8 @@ class TestAliasManager(unittest.TestCase):
                 a2 = AliasManager.get(self.t2)
                 a1 = AliasManager.get(self.t1)
                 self.synchro.set()
-                self.assertEqual(a1, AliasManager.get(self.t1))
-                self.assertEqual(a2, AliasManager.get(self.t2))
+                assert a1 == AliasManager.get(self.t1)
+                assert a2 == AliasManager.get(self.t2)
                 self.succeed2.set()
             return
         except Exception:
