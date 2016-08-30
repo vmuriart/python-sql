@@ -1,4 +1,0 @@
-image: python_all
-script:
-    - pip install tox
-    - tox --skip-missing-interpreters
