@@ -27,10 +27,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from setuptools import setup, find_packages
+import codecs
 import os
 import re
-import codecs
+
+from setuptools import setup, find_packages
 
 
 def read(fname):
@@ -39,17 +40,21 @@ def read(fname):
 
 
 def get_version():
-    init = read(os.path.join('sql', '__init__.py'))
-    return re.search("__version__ = '([0-9.]*)'", init).group(1)
+    init = read(os.path.join('src/sql', '__init__.py'))
+    return re.search("__version__ = '([0-9.]*(-dev\d+)?)'", init).group(1)
 
-setup(name='python-sql',
+
+setup(
+    name='python-sql',
     version=get_version(),
     description='Library to write SQL queries',
-    long_description=read('README'),
+    long_description=read('README.md'),
+    license='BSD',
     author='B2CK',
     author_email='info@b2ck.com',
-    url='http://python-sql.tryton.org/',
-    packages=find_packages(),
+    url='https://github.com/vmuriart/python-sql',
+    packages=find_packages('src'),
+    package_dir={'': 'src'},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -60,8 +65,6 @@ setup(name='python-sql',
         'Programming Language :: Python :: 3',
         'Topic :: Database',
         'Topic :: Software Development :: Libraries :: Python Modules',
-        ],
-    license='BSD',
-    test_suite='sql.tests',
+    ],
     use_2to3=True,
-    )
+)
