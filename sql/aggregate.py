@@ -29,13 +29,12 @@
 
 from sql import Expression, Window
 
-__all__ = [
-    'Avg', 'BitAnd', 'BitOr', 'BoolAnd', 'BoolOr', 'Count', 'Every',
-    'Max', 'Min', 'Stddev', 'Sum', 'Variance']
+__all__ = ('Avg', 'BitAnd', 'BitOr', 'BoolAnd', 'BoolOr', 'Count', 'Every',
+           'Max', 'Min', 'Stddev', 'Sum', 'Variance')
 
 
 class Aggregate(Expression):
-    __slots__ = ('expression', '_distinct', '_within', '_filter', '_window')
+    __slots__ = 'expression', '_distinct', '_within', '_filter', '_window'
     _sql = ''
 
     def __init__(self, expression, distinct=False, within=None, filter_=None,

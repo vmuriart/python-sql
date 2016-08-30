@@ -107,11 +107,9 @@ class FunctionKeyword(Function):
         Mapping = Flavor.get().function_mapping.get(self.__class__)
         if Mapping:
             return str(Mapping(*self.args))
-        return (self._function + '('
-                + ' '.join(chain(*zip(
-            self._keywords,
-            map(self._format, self.args))))[1:]
-                + ')')
+        return (self._function + '(' + ' '.join(
+            chain(*zip(self._keywords, map(self._format, self.args)))
+        )[1:] + ')')
 
 
 class FunctionNotCallable(Function):
