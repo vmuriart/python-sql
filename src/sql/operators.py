@@ -33,6 +33,7 @@ import warnings
 from array import array
 
 from sql import Expression, Select, CombiningQuery, Flavor, Null
+from sql._compat import text_type, map
 
 __all__ = [
     'And', 'Or', 'Not', 'Less', 'Greater', 'LessEqual', 'GreaterEqual',
@@ -80,7 +81,7 @@ class Operator(Expression):
         if param is None:
             param = Flavor.get().param
         if isinstance(operand, Expression):
-            return str(operand)
+            return text_type(operand)
         elif isinstance(operand, (Select, CombiningQuery)):
             return '({0!s})'.format(operand)
         elif isinstance(operand, (list, tuple)):
@@ -154,7 +155,7 @@ class NaryOperator(list, Operator):
 
     def __str__(self):
         return '(' + (' {0!s} '.format(self._operator)).join(
-            map(str, self)) + ')'
+            map(text_type, self)) + ')'
 
 
 class And(NaryOperator):

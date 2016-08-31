@@ -30,6 +30,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from sql import Expression, Window
+from sql._compat import text_type, map
 
 __all__ = ('Avg', 'BitAnd', 'BitOr', 'BoolAnd', 'BoolOr', 'Count', 'Every',
            'Max', 'Min', 'Stddev', 'Sum', 'Variance')
@@ -98,7 +99,7 @@ class Aggregate(Expression):
         within = ''
         if self.within:
             within = ' WITHIN GROUP (ORDER BY {0!s})'.format(
-                ', '.join(map(str, self.within)))
+                ', '.join(map(text_type, self.within)))
         filter_ = ''
         if self.filter_:
             filter_ = ' FILTER (WHERE {0!s})'.format(self.filter_)

@@ -32,6 +32,7 @@
 from itertools import chain
 
 from sql import Expression, Flavor, FromItem, Window
+from sql._compat import string_types, text_type, map, zip
 
 __all__ = [
     'Abs', 'Cbrt', 'Ceil', 'Degrees', 'Div', 'Exp', 'Floor', 'Ln',
@@ -76,14 +77,14 @@ class Function(Expression, FromItem):
     @staticmethod
     def _format(value):
         if isinstance(value, Expression):
-            return str(value)
+            return text_type(value)
         else:
             return Flavor().get().param
 
     def __str__(self):
         Mapping = Flavor.get().function_mapping.get(self.__class__)
         if Mapping:
-            return str(Mapping(*self.args))
+            return text_type(Mapping(*self.args))
         return self._function + '(' + ', '.join(
             map(self._format, self.args)) + ')'
 
@@ -109,10 +110,9 @@ class FunctionKeyword(Function):
     def __str__(self):
         Mapping = Flavor.get().function_mapping.get(self.__class__)
         if Mapping:
-            return str(Mapping(*self.args))
-        return (self._function + '(' + ' '.join(
-            chain(*zip(self._keywords, map(self._format, self.args)))
-        )[1:] + ')')
+            return text_type(Mapping(*self.args))
+        return self._function + '(' + ' '.join(chain(*list(zip(
+            self._keywords, list(map(self._format, self.args))))))[1:] + ')'
 
 
 class FunctionNotCallable(Function):
@@ -122,7 +122,7 @@ class FunctionNotCallable(Function):
     def __str__(self):
         Mapping = Flavor.get().function_mapping.get(self.__class__)
         if Mapping:
-            return str(Mapping(*self.args))
+            return text_type(Mapping(*self.args))
         return self._function
 
 
@@ -324,14 +324,15 @@ class Trim(Function):
         flavor = Flavor.get()
         Mapping = flavor.function_mapping.get(self.__class__)
         if Mapping:
-            return str(Mapping(self.string, self.position, self.characters))
+            return text_type(
+                Mapping(self.string, self.position, self.characters))
         param = flavor.param
 
         def format(arg):
-            if isinstance(arg, basestring):
+            if isinstance(arg, string_types):
                 return param
             else:
-                return str(arg)
+                return text_type(arg)
 
         return self._function + '({0!s} {1!s} FROM {2!s})'.format(
             self.position, format(self.characters), format(self.string))
@@ -343,7 +344,7 @@ class Trim(Function):
             return Mapping(self.string, self.position, self.characters).params
         p = []
         for arg in (self.characters, self.string):
-            if isinstance(arg, basestring):
+            if isinstance(arg, string_types):
                 p.append(arg)
             elif hasattr(arg, 'params'):
                 p.extend(arg.params)
@@ -477,9 +478,9 @@ class AtTimeZone(Function):
         flavor = Flavor.get()
         Mapping = flavor.function_mapping.get(self.__class__)
         if Mapping:
-            return str(Mapping(self.field, self.zone))
+            return text_type(Mapping(self.field, self.zone))
         param = flavor.param
-        return '{0!s} AT TIME ZONE {1!s}'.format(str(self.field), param)
+        return '{0!s} AT TIME ZONE {1!s}'.format(text_type(self.field), param)
 
     @property
     def params(self):

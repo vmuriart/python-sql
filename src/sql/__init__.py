@@ -40,6 +40,8 @@ import warnings
 from threading import local, currentThread
 from collections import defaultdict
 
+from sql._compat import integer_types, text_type, map, zip
+
 
 def alias(i, letters=string.ascii_lowercase):
     '''
@@ -192,7 +194,7 @@ class Query(object):
         return ()
 
     def __iter__(self):
-        yield str(self)
+        yield text_type(self)
         yield self.params
 
     def __or__(self, other):
@@ -339,7 +341,7 @@ class SelectQuery(WithQuery):
     def _order_by_str(self):
         order_by = ''
         if self.order_by:
-            order_by = ' ORDER BY ' + ', '.join(map(str, self.order_by))
+            order_by = ' ORDER BY ' + ', '.join(map(text_type, self.order_by))
         return order_by
 
     @property
@@ -349,7 +351,7 @@ class SelectQuery(WithQuery):
     @limit.setter
     def limit(self, value):
         if value is not None:
-            assert isinstance(value, (int, long))
+            assert isinstance(value, integer_types)
         self._limit = value
 
     @property
@@ -359,7 +361,7 @@ class SelectQuery(WithQuery):
     @offset.setter
     def offset(self, value):
         if value is not None:
-            assert isinstance(value, (int, long))
+            assert isinstance(value, integer_types)
         self._offset = value
 
     @property
@@ -469,7 +471,7 @@ class Select(FromItem, SelectQuery):
             else:
                 return '{0!s} AS {1!s}'.format(column.expression, column)
         else:
-            return str(column)
+            return text_type(column)
 
     def _window_functions(self):
         from sql.functions import WindowFunction
@@ -528,23 +530,24 @@ class Select(FromItem, SelectQuery):
     def __str__(self):
         if (Flavor.get().limitstyle == 'rownum'
             and (self.limit is not None or self.offset is not None)):
-            return self._rownum(str)
+            return self._rownum(text_type)
 
         with AliasManager():
-            from_ = str(self.from_)
+            from_ = text_type(self.from_)
             if self.columns:
                 columns = ', '.join(map(self._format_column, self.columns))
             else:
                 columns = '*'
             where = ''
             if self.where:
-                where = ' WHERE ' + str(self.where)
+                where = ' WHERE ' + text_type(self.where)
             group_by = ''
             if self.group_by:
-                group_by = ' GROUP BY ' + ', '.join(map(str, self.group_by))
+                group_by = ' GROUP BY ' + ', '.join(
+                    map(text_type, self.group_by))
             having = ''
             if self.having:
-                having = ' HAVING ' + str(self.having)
+                having = ' HAVING ' + text_type(self.having)
             window = ''
             windows = [f.window for f in self._window_functions()]
             if windows:
@@ -552,7 +555,7 @@ class Select(FromItem, SelectQuery):
                     '"{0!s}" AS ({1!s})'.format(w.alias, w) for w in windows)
             for_ = ''
             if self.for_ is not None:
-                for_ = ' ' + ' '.join(map(str, self.for_))
+                for_ = ' ' + ' '.join(map(text_type, self.for_))
             return (self._with_str()
                     + 'SELECT {0!s} FROM {1!s}'.format(columns, from_)
                     + where + group_by + having + window + self._order_by_str
@@ -647,7 +650,7 @@ class Insert(WithQuery):
         if param is None:
             param = Flavor.get().param
         if isinstance(value, Expression):
-            return str(value)
+            return text_type(value)
         elif isinstance(value, Select):
             return '({0!s})'.format(value)
         else:
@@ -657,15 +660,16 @@ class Insert(WithQuery):
         columns = ''
         if self.columns:
             assert all(col.table == self.table for col in self.columns)
-            columns = ' (' + ', '.join(map(str, self.columns)) + ')'
+            columns = ' (' + ', '.join(map(text_type, self.columns)) + ')'
         if isinstance(self.values, Query):
-            values = ' {0!s}'.format(str(self.values))
+            values = ' {0!s}'.format(text_type(self.values))
             # TODO manage DEFAULT
         elif self.values is None:
             values = ' DEFAULT VALUES'
         returning = ''
         if self.returning:
-            returning = ' RETURNING ' + ', '.join(map(str, self.returning))
+            returning = ' RETURNING ' + ', '.join(
+                map(text_type, self.returning))
         with AliasManager():
             return (self._with_str()
                     + 'INSERT INTO {0!s}'.format(self.table) + columns
@@ -719,26 +723,26 @@ class Update(Insert):
     def __str__(self):
         assert all(col.table == self.table for col in self.columns)
         # Get columns without alias
-        columns = map(str, self.columns)
+        columns = list(map(text_type, self.columns))
 
         with AliasManager():
             from_ = ''
             if self.from_:
                 table = From([self.table])
-                from_ = ' FROM {0!s}'.format(str(self.from_))
+                from_ = ' FROM {0!s}'.format(text_type(self.from_))
             else:
                 table = self.table
-                AliasManager.set(table, str(table)[1:-1])
+                AliasManager.set(table, text_type(table)[1:-1])
             values = ', '.join('{0!s} = {1!s}'.format(c, self._format(v))
                                for c, v in zip(columns, self.values))
             where = ''
             if self.where:
-                where = ' WHERE ' + str(self.where)
+                where = ' WHERE ' + text_type(self.where)
             returning = ''
             if self.returning:
-                returning = ' RETURNING ' + ', '.join(map(str, self.returning))
-            return (self._with_str()
-                    + 'UPDATE {0!s} SET '.format(table) + values + from_
+                returning = ' RETURNING ' + ', '.join(
+                    map(text_type, self.returning))
+            return (self._with_str() + 'UPDATE {0!s} SET '.format(table) + values + from_
                     + where + returning)
 
     @property
@@ -810,13 +814,13 @@ class Delete(WithQuery):
             only = ' ONLY' if self.only else ''
             where = ''
             if self.where:
-                where = ' WHERE ' + str(self.where)
+                where = ' WHERE ' + text_type(self.where)
             returning = ''
             if self.returning:
-                returning = ' RETURNING ' + ', '.join(map(str, self.returning))
-            return (self._with_str()
-                    + 'DELETE FROM{0!s} {1!s}'.format(only, self.table)
-                    + where + returning)
+                returning = ' RETURNING ' + ', '.join(
+                    map(text_type, self.returning))
+            return self._with_str() + 'DELETE FROM{0!s} {1!s}'.format(
+                only, self.table) + where + returning
 
     @property
     def params(self):
@@ -843,8 +847,8 @@ class CombiningQuery(FromItem, SelectQuery):
     def __str__(self):
         with AliasManager():
             operator = ' {0!s} {1!s}'.format(self._operator, 'ALL ' if self.all_ else '')
-            return (operator.join(map(str, self.queries)) + self._order_by_str
-                    + self._limit_offset_str)
+            return (operator.join(map(text_type, self.queries)) +
+                    self._order_by_str + self._limit_offset_str)
 
     @property
     def params(self):
@@ -1053,7 +1057,7 @@ class Values(list, Query, FromItem):
 
         def format_(value):
             if isinstance(value, Expression):
-                return str(value)
+                return text_type(value)
             else:
                 return param
 
@@ -1377,7 +1381,7 @@ class Window(object):
     @start.setter
     def start(self, value):
         if value:
-            assert isinstance(value, (int, long))
+            assert isinstance(value, integer_types)
         self._start = value
 
     @property
@@ -1387,7 +1391,7 @@ class Window(object):
     @end.setter
     def end(self, value):
         if value:
-            assert isinstance(value, (int, long))
+            assert isinstance(value, integer_types)
         self._end = value
 
     @property
@@ -1397,10 +1401,11 @@ class Window(object):
     def __str__(self):
         partition = ''
         if self.partition:
-            partition = 'PARTITION BY ' + ', '.join(map(str, self.partition))
+            partition = 'PARTITION BY ' + ', '.join(
+                map(text_type, self.partition))
         order_by = ''
         if self.order_by:
-            order_by = ' ORDER BY ' + ', '.join(map(str, self.order_by))
+            order_by = ' ORDER BY ' + ', '.join(map(text_type, self.order_by))
 
         def format(frame, direction):
             if frame is None:
@@ -1556,7 +1561,7 @@ class For(object):
     def __str__(self):
         tables = ''
         if self.tables:
-            tables = ' OF ' + ', '.join(map(str, self.tables))
+            tables = ' OF ' + ', '.join(map(text_type, self.tables))
         nowait = ''
         if self.nowait:
             nowait = ' NOWAIT'

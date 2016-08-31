@@ -30,6 +30,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from sql import Expression, Flavor
+from sql._compat import text_type, map
 
 __all__ = 'Case', 'Coalesce', 'NullIf', 'Greatest', 'Least'
 
@@ -43,7 +44,7 @@ class Conditional(Expression):
     @staticmethod
     def _format(value):
         if isinstance(value, Expression):
-            return str(value)
+            return text_type(value)
         else:
             return Flavor().get().param
 

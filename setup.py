@@ -69,5 +69,4 @@ setup(
         'Topic :: Database',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    use_2to3=True,
 )
