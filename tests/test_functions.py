@@ -152,5 +152,6 @@ class TestWindowFunction(unittest.TestCase):
         function = Rank(t.c, filter_=t.c > 0, window=Window([]))
 
         with AliasManager():
-            assert str(function) == 'RANK("a"."c") FILTER (WHERE ("a"."c" > %s)) OVER "b"'
+            assert str(function) == ('RANK("a"."c") FILTER '
+                                     '(WHERE ("a"."c" > %s)) OVER "b"')
         assert function.params == (0,)

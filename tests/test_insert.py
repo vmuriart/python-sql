@@ -52,7 +52,8 @@ class TestInsert(unittest.TestCase):
     def test_insert_many_values(self):
         query = self.table.insert([self.table.c1, self.table.c2],
                                   [['foo', 'bar'], ['spam', 'eggs']])
-        assert str(query) == 'INSERT INTO "t" ("c1", "c2") VALUES (%s, %s), (%s, %s)'
+        assert str(query) == ('INSERT INTO "t" ("c1", "c2") '
+                              'VALUES (%s, %s), (%s, %s)')
         assert query.params == ('foo', 'bar', 'spam', 'eggs')
 
     def test_insert_subselect(self):
@@ -60,7 +61,8 @@ class TestInsert(unittest.TestCase):
         t2 = Table('t2')
         subquery = t2.select(t2.c1, t2.c2)
         query = t1.insert([t1.c1, t1.c2], subquery)
-        assert str(query) == 'INSERT INTO "t1" ("c1", "c2") SELECT "a"."c1", "a"."c2" FROM "t2" AS "a"'
+        assert str(query) == ('INSERT INTO "t1" ("c1", "c2") '
+                              'SELECT "a"."c1", "a"."c2" FROM "t2" AS "a"')
         assert query.params == ()
 
     def test_insert_function(self):
@@ -72,7 +74,8 @@ class TestInsert(unittest.TestCase):
         query = self.table.insert([self.table.c1, self.table.c2],
                                   [['foo', 'bar']],
                                   returning=[self.table.c1, self.table.c2])
-        assert str(query) == 'INSERT INTO "t" ("c1", "c2") VALUES (%s, %s) RETURNING "c1", "c2"'
+        assert str(query) == ('INSERT INTO "t" ("c1", "c2") '
+                              'VALUES (%s, %s) RETURNING "c1", "c2"')
         assert query.params == ('foo', 'bar')
 
     def test_with(self):
@@ -83,5 +86,8 @@ class TestInsert(unittest.TestCase):
             [self.table.c1],
             with_=[w],
             values=w.select())
-        assert str(query) == 'WITH "a" AS (SELECT * FROM "t1" AS "b") INSERT INTO "t" ("c1") SELECT * FROM "a" AS "a"'
+        assert str(query) == ('WITH "a" AS '
+                              '(SELECT * FROM "t1" AS "b") '
+                              'INSERT INTO "t" ("c1") '
+                              'SELECT * FROM "a" AS "a"')
         assert query.params == ()

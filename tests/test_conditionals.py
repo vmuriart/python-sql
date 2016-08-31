@@ -42,13 +42,19 @@ class TestConditionals(unittest.TestCase):
         case = Case((self.table.c1, 'foo'),
                     (self.table.c2, 'bar'),
                     else_=self.table.c3)
-        assert str(case) == 'CASE WHEN "c1" THEN %s WHEN "c2" THEN %s ELSE "c3" END'
+        assert str(case) == ('CASE '
+                             'WHEN "c1" THEN %s '
+                             'WHEN "c2" THEN %s '
+                             'ELSE "c3" END')
         assert case.params == ('foo', 'bar')
 
     def test_case_no_expression(self):
         case = Case((True, self.table.c1), (self.table.c2, False),
                     else_=False)
-        assert str(case) == 'CASE WHEN %s THEN "c1" WHEN "c2" THEN %s ELSE %s END'
+        assert str(case) == ('CASE '
+                             'WHEN %s THEN "c1" '
+                             'WHEN "c2" THEN %s '
+                             'ELSE %s END')
         assert case.params == (True, False, False)
 
     def test_coalesce(self):

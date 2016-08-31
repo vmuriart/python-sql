@@ -57,15 +57,21 @@ class TestOrder(unittest.TestCase):
             Flavor.set(Flavor(null_ordering=False))
 
             exp = NullsFirst(self.column)
-            assert str(exp) == 'CASE WHEN ("c" IS NULL) THEN %s ELSE %s END ASC, "c"'
+            assert str(exp) == ('CASE '
+                                'WHEN ("c" IS NULL) THEN %s '
+                                'ELSE %s END ASC, "c"')
             assert exp.params == (0, 1)
 
             exp = NullsFirst(Desc(self.column))
-            assert str(exp) == 'CASE WHEN ("c" IS NULL) THEN %s ELSE %s END ASC, "c" DESC'
+            assert str(exp) == ('CASE '
+                                'WHEN ("c" IS NULL) THEN %s '
+                                'ELSE %s END ASC, "c" DESC')
             assert exp.params == (0, 1)
 
             exp = NullsLast(Literal(2))
-            assert str(exp) == 'CASE WHEN (%s IS NULL) THEN %s ELSE %s END ASC, %s'
+            assert str(exp) == ('CASE '
+                                'WHEN (%s IS NULL) THEN %s '
+                                'ELSE %s END ASC, %s')
             assert exp.params == (2, 1, 0, 2)
         finally:
             Flavor.set(Flavor())

@@ -50,7 +50,8 @@ class TestUpdate(unittest.TestCase):
         t1 = Table('t1')
         t2 = Table('t2')
         query = t1.update([t1.c], ['foo'], from_=[t2], where=(t1.c == t2.c))
-        assert str(query) == 'UPDATE "t1" AS "b" SET "c" = %s FROM "t2" AS "a" WHERE ("b"."c" = "a"."c")'
+        assert str(query) == ('UPDATE "t1" AS "b" SET "c" = %s '
+                              'FROM "t2" AS "a" WHERE ("b"."c" = "a"."c")')
         assert query.params == ('foo',)
 
     def test_update_subselect(self):
@@ -59,7 +60,9 @@ class TestUpdate(unittest.TestCase):
         query_list = t1.update([t1.c], [t2.select(t2.c, where=t2.i == t1.i)])
         query_nolist = t1.update([t1.c], t2.select(t2.c, where=t2.i == t1.i))
         for query in [query_list, query_nolist]:
-            assert str(query) == 'UPDATE "t1" SET "c" = (SELECT "b"."c" FROM "t2" AS "b" WHERE ("b"."i" = "t1"."i"))'
+            assert str(query) == ('UPDATE "t1" SET "c" = '
+                                  '(SELECT "b"."c" FROM "t2" AS "b" '
+                                  'WHERE ("b"."i" = "t1"."i"))')
             assert query.params == ()
 
     def test_update_returning(self):
@@ -76,5 +79,9 @@ class TestUpdate(unittest.TestCase):
             [self.table.c2],
             with_=[w],
             values=[w.select(w.c3, where=w.c4 == 2)])
-        assert str(query) == 'WITH "b" AS (SELECT "c"."c1" FROM "t1" AS "c") UPDATE "t" SET "c2" = (SELECT "b"."c3" FROM "b" AS "b" WHERE ("b"."c4" = %s))'
+        assert str(query) == ('WITH "b" AS '
+                              '(SELECT "c"."c1" FROM "t1" AS "c") '
+                              'UPDATE "t" SET "c2" = '
+                              '(SELECT "b"."c3" FROM "b" AS "b" '
+                              'WHERE ("b"."c4" = %s))')
         assert query.params == (2,)

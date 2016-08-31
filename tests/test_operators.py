@@ -305,7 +305,9 @@ class TestOperators(unittest.TestCase):
         assert in_.params == ()
 
         in_ = In(self.table.c1, t2.select(t2.c2) | t2.select(t2.c3))
-        assert str(in_) == '("c1" IN (SELECT "a"."c2" FROM "t2" AS "a" UNION SELECT "a"."c3" FROM "t2" AS "a"))'
+        assert str(in_) == ('("c1" IN '
+                            '(SELECT "a"."c2" FROM "t2" AS "a" UNION '
+                            'SELECT "a"."c3" FROM "t2" AS "a"))')
         assert in_.params == ()
 
         in_ = In(self.table.c1, array('l', range(10)))
@@ -315,7 +317,9 @@ class TestOperators(unittest.TestCase):
     def test_exists(self):
         exists = Exists(self.table.select(self.table.c1,
                                           where=self.table.c1 == 1))
-        assert str(exists) == '(EXISTS (SELECT "a"."c1" FROM "t" AS "a" WHERE ("a"."c1" = %s)))'
+        assert str(exists) == ('(EXISTS (SELECT "a"."c1" '
+                               'FROM "t" AS "a" '
+                               'WHERE ("a"."c1" = %s)))')
         assert exists.params == (1,)
 
     def test_floordiv(self):
@@ -325,4 +329,5 @@ class TestOperators(unittest.TestCase):
             assert len(w) == 1
             assert issubclass(w[-1].category, DeprecationWarning)
             if hasattr(self, 'assertIn'):
-                assert 'FloorDiv operator is deprecated, use Div function' in str(w[-1].message)
+                assert ('FloorDiv operator is deprecated, '
+                        'use Div function') in str(w[-1].message)

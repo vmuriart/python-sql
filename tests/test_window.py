@@ -53,26 +53,31 @@ class TestWindow(unittest.TestCase):
         t = Table('t')
         window = Window([t.c], frame='RANGE')
 
-        assert str(window) == 'PARTITION BY "c" RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW'
+        assert str(window) == ('PARTITION BY "c" RANGE '
+                               'BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW')
         assert window.params == ()
 
         window.start = -1
-        assert str(window) == 'PARTITION BY "c" RANGE BETWEEN 1 PRECEDING AND CURRENT ROW'
+        assert str(window) == ('PARTITION BY "c" RANGE '
+                               'BETWEEN 1 PRECEDING AND CURRENT ROW')
         assert window.params == ()
 
         window.start = 0
         window.end = 1
-        assert str(window) == 'PARTITION BY "c" RANGE BETWEEN CURRENT ROW AND 1 FOLLOWING'
+        assert str(window) == ('PARTITION BY "c" RANGE '
+                               'BETWEEN CURRENT ROW AND 1 FOLLOWING')
         assert window.params == ()
 
         window.start = 1
         window.end = None
-        assert str(window) == 'PARTITION BY "c" RANGE BETWEEN 1 FOLLOWING AND UNBOUNDED FOLLOWING'
+        assert str(window) == ('PARTITION BY "c" RANGE '
+                               'BETWEEN 1 FOLLOWING AND UNBOUNDED FOLLOWING')
         assert window.params == ()
 
     def test_window_rows(self):
         t = Table('t')
         window = Window([t.c], frame='ROWS')
 
-        assert str(window) == 'PARTITION BY "c" ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW'
+        assert str(window) == ('PARTITION BY "c" ROWS '
+                               'BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW')
         assert window.params == ()

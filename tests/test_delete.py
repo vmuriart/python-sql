@@ -51,7 +51,8 @@ class TestDelete(unittest.TestCase):
         t1 = Table('t1')
         t2 = Table('t2')
         query = t1.delete(where=(t1.c.in_(t2.select(t2.c))))
-        assert str(query) == 'DELETE FROM "t1" WHERE ("c" IN (SELECT "a"."c" FROM "t2" AS "a"))'
+        assert str(query) == ('DELETE FROM "t1" WHERE '
+                              '("c" IN (SELECT "a"."c" FROM "t2" AS "a"))')
         assert query.params == ()
 
     def test_delete_returning(self):
@@ -65,5 +66,8 @@ class TestDelete(unittest.TestCase):
 
         query = self.table.delete(with_=[w],
                                   where=self.table.c2.in_(w.select(w.c3)))
-        assert str(query) == 'WITH "a" AS (SELECT "b"."c1" FROM "t1" AS "b") DELETE FROM "t" WHERE ("c2" IN (SELECT "a"."c3" FROM "a" AS "a"))'
+        assert str(query) == ('WITH "a" AS '
+                              '(SELECT "b"."c1" FROM "t1" AS "b") '
+                              'DELETE FROM "t" WHERE '
+                              '("c2" IN (SELECT "a"."c3" FROM "a" AS "a"))')
         assert query.params == ()

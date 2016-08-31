@@ -46,7 +46,8 @@ class TestJoin(unittest.TestCase):
 
         join.condition = t1.c == t2.c
         with AliasManager():
-            assert str(join) == '"t1" AS "a" INNER JOIN "t2" AS "b" ON ("a"."c" = "b"."c")'
+            assert str(join) == ('"t1" AS "a" INNER JOIN '
+                                 '"t2" AS "b" ON ("a"."c" = "b"."c")')
 
     def test_join_subselect(self):
         t1 = Table('t1')
@@ -55,7 +56,9 @@ class TestJoin(unittest.TestCase):
         join = Join(t1, select)
         join.condition = t1.c == select.c
         with AliasManager():
-            assert str(join) == '"t1" AS "a" INNER JOIN (SELECT * FROM "t2" AS "c") AS "b" ON ("a"."c" = "b"."c")'
+            assert str(join) == ('"t1" AS "a" INNER JOIN '
+                                 '(SELECT * FROM "t2" AS "c") '
+                                 'AS "b" ON ("a"."c" = "b"."c")')
             assert join.params == ()
 
     def test_join_function(self):
