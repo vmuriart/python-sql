@@ -530,7 +530,7 @@ class Select(FromItem, SelectQuery):
     def __str__(self):
         if (Flavor.get().limitstyle == 'rownum'
             and (self.limit is not None or self.offset is not None)):
-            return self._rownum(text_type)
+            return self._rownum(str)
 
         with AliasManager():
             from_ = text_type(self.from_)
