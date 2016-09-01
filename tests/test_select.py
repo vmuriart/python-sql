@@ -30,7 +30,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
-import warnings
 from copy import deepcopy
 
 from sql import Table, Join, Union, Literal, Flavor, For, With, Window, Select
@@ -104,17 +103,6 @@ class TestSelect(unittest.TestCase):
         intersect = query1 & query2
         assert str(intersect) == ('SELECT * FROM "t" AS "a" INTERSECT '
                                   'SELECT * FROM "t2" AS "b"')
-
-        from sql import Intersect, Interesect
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always')
-            interesect = Interesect(query1, query2)
-            assert len(w) == 1
-            assert issubclass(w[-1].category, DeprecationWarning)
-            if hasattr(self, 'assertIn'):
-                assert ('Interesect query is deprecated, '
-                        'use Intersect') in str(w[-1].message)
-        assert isinstance(interesect, Intersect)
 
     def test_select_except(self):
         query1 = self.table.select()

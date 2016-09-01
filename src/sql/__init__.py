@@ -32,7 +32,6 @@
 from __future__ import unicode_literals
 
 import string
-import warnings
 from threading import local, currentThread
 from collections import defaultdict
 
@@ -865,13 +864,6 @@ class Union(CombiningQuery):
 class Intersect(CombiningQuery):
     __slots__ = ()
     _operator = 'INTERSECT'
-
-
-class Interesect(Intersect):
-    def __init__(self, *args, **kwargs):
-        warnings.warn('Interesect query is deprecated, use Intersect',
-                      DeprecationWarning, stacklevel=2)
-        super(Interesect, self).__init__(*args, **kwargs)
 
 
 class Except(CombiningQuery):

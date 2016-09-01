@@ -29,7 +29,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import warnings
 from array import array
 
 from sql import Expression, Flavor, Select, CombiningQuery, Null
@@ -251,17 +250,6 @@ class Mul(BinaryOperator):
 class Div(BinaryOperator):
     __slots__ = ()
     _operator = '/'
-
-
-# For backward compatibility
-class FloorDiv(BinaryOperator):
-    __slots__ = ()
-    _operator = '/'
-
-    def __init__(self, left, right):
-        warnings.warn('FloorDiv operator is deprecated, use Div function',
-                      DeprecationWarning, stacklevel=2)
-        super(FloorDiv, self).__init__(left, right)
 
 
 class Mod(BinaryOperator):

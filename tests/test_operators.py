@@ -30,15 +30,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
-import warnings
 from array import array
 
 from sql import Table, Literal, Null, Flavor
-from sql.operators import (And, Or, Not, Neg, Pos, Less, Greater, LessEqual,
-                           GreaterEqual, Equal, NotEqual, Sub, Mul, Div, Mod,
-                           Pow, Abs, LShift,
-                           RShift, Like, NotLike, ILike, NotILike, In, NotIn,
-                           FloorDiv, Exists)
+from sql.operators import (
+    And, Or, Not, Neg, Pos, Less, Greater, LessEqual, GreaterEqual, Equal,
+    NotEqual, Sub, Mul, Div, Mod, Pow, Abs, LShift, RShift, Like, NotLike,
+    ILike, NotILike, In, NotIn, Exists)
 
 
 class TestOperators(unittest.TestCase):
@@ -321,13 +319,3 @@ class TestOperators(unittest.TestCase):
                                'FROM "t" AS "a" '
                                'WHERE ("a"."c1" = %s)))')
         assert exists.params == (1,)
-
-    def test_floordiv(self):
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            FloorDiv(4, 2)
-            assert len(w) == 1
-            assert issubclass(w[-1].category, DeprecationWarning)
-            if hasattr(self, 'assertIn'):
-                assert ('FloorDiv operator is deprecated, '
-                        'use Div function') in str(w[-1].message)
