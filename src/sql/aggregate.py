@@ -94,18 +94,18 @@ class Aggregate(Expression):
 
     def __str__(self):
         quantifier = 'DISTINCT ' if self.distinct else ''
-        aggregate = '{0!s}({1!s}{2!s})'.format(
+        aggregate = '{0}({1}{2})'.format(
             self._sql, quantifier, self.expression)
         within = ''
         if self.within:
-            within = ' WITHIN GROUP (ORDER BY {0!s})'.format(
+            within = ' WITHIN GROUP (ORDER BY {0})'.format(
                 ', '.join(map(text_type, self.within)))
         filter_ = ''
         if self.filter_:
-            filter_ = ' FILTER (WHERE {0!s})'.format(self.filter_)
+            filter_ = ' FILTER (WHERE {0})'.format(self.filter_)
         window = ''
         if self.window:
-            window = ' OVER "{0!s}"'.format(self.window.alias)
+            window = ' OVER "{0}"'.format(self.window.alias)
         return aggregate + within + filter_ + window
 
     @property

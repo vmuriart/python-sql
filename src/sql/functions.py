@@ -67,7 +67,7 @@ class Function(Expression, FromItem):
 
     @property
     def columns_definitions(self):
-        return ', '.join('"{0!s}" {1!s}'.format(c, d)
+        return ', '.join('"{0}" {1}'.format(c, d)
                          for c, d in self._columns_definitions)
 
     @columns_definitions.setter
@@ -331,7 +331,7 @@ class Trim(Function):
             else:
                 return text_type(arg)
 
-        return self._function + '({0!s} {1!s} FROM {2!s})'.format(
+        return self._function + '({0} {1} FROM {2})'.format(
             self.position, format(self.characters), format(self.string))
 
     @property
@@ -477,7 +477,7 @@ class AtTimeZone(Function):
         if mapping:
             return text_type(mapping(self.field, self.zone))
         param = flavor.param
-        return '{0!s} AT TIME ZONE {1!s}'.format(text_type(self.field), param)
+        return '{0} AT TIME ZONE {1}'.format(text_type(self.field), param)
 
     @property
     def params(self):
@@ -520,8 +520,8 @@ class WindowFunction(Function):
         function = super(WindowFunction, self).__str__()
         filter_ = ''
         if self.filter_:
-            filter_ = ' FILTER (WHERE {0!s})'.format(self.filter_)
-        over = ' OVER "{0!s}"'.format(self.window.alias)
+            filter_ = ' FILTER (WHERE {0})'.format(self.filter_)
+        over = ' OVER "{0}"'.format(self.window.alias)
         return function + filter_ + over
 
     @property
