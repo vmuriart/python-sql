@@ -208,8 +208,8 @@ class WithQuery(Query):
 
     def __init__(self, **kwargs):
         self._with = None
-        self.with_ = kwargs.pop('with_', None)
-        super(Query, self).__init__(**kwargs)
+        self.with_ = kwargs.get('with_')
+        super(Query, self).__init__()
 
     @property
     def with_(self):
@@ -286,11 +286,11 @@ class Lateral(FromItem):
 class With(FromItem):
     __slots__ = ('columns', 'query', 'recursive')
 
-    def __init__(self, *columns, **kwargs):
-        self.recursive = kwargs.pop('recursive', False)
-        self.columns = columns
-        self.query = kwargs.pop('query', None)
-        super(With, self).__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        self.columns = args
+        self.recursive = kwargs.get('recursive')
+        self.query = kwargs.get('query')
+        super(With, self).__init__()
 
     def statement(self):
         columns = ' ({0})'.format(
@@ -312,14 +312,14 @@ class With(FromItem):
 class SelectQuery(WithQuery):
     __slots__ = ('_order_by', '_limit', '_offset')
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self._order_by = None
         self._limit = None
         self._offset = None
-        self.order_by = kwargs.pop('order_by', None)
-        self.limit = kwargs.pop('limit', None)
-        self.offset = kwargs.pop('offset', None)
-        super(SelectQuery, self).__init__(*args, **kwargs)
+        self.order_by = kwargs.get('order_by')
+        self.limit = kwargs.get('limit')
+        self.offset = kwargs.get('offset')
+        super(SelectQuery, self).__init__(**kwargs)
 
     @property
     def order_by(self):
@@ -762,8 +762,8 @@ class Update(Insert):
 class Delete(WithQuery):
     __slots__ = ('_table', '_where', '_returning', 'only')
 
-    def __init__(self, table, only=False, using=None, where=None,
-                 returning=None, **kwargs):
+    def __init__(self, table, only=False, where=None, returning=None,
+                 **kwargs):
         self._table = None
         self._where = None
         self._returning = None
@@ -836,7 +836,7 @@ class CombiningQuery(FromItem, SelectQuery):
     def __init__(self, *queries, **kwargs):
         assert all(isinstance(q, Query) for q in queries)
         self.queries = queries
-        self.all_ = kwargs.pop('all_', False)
+        self.all_ = kwargs.get('all_')
         super(CombiningQuery, self).__init__(**kwargs)
 
     def __str__(self):

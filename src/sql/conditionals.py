@@ -52,8 +52,8 @@ class Conditional(Expression):
 class Case(Conditional):
     __slots__ = ('whens', 'else_')
 
-    def __init__(self, *whens, **kwargs):
-        self.whens = whens
+    def __init__(self, *args, **kwargs):
+        self.whens = args
         self.else_ = kwargs.get('else_')
 
     def __str__(self):
@@ -90,8 +90,8 @@ class Coalesce(Conditional):
     __slots__ = ('values',)
     _conditional = 'COALESCE'
 
-    def __init__(self, *values):
-        self.values = values
+    def __init__(self, *args):
+        self.values = args
 
     def __str__(self):
         return (self._conditional + '(' +

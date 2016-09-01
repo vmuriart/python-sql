@@ -45,6 +45,12 @@ class Aggregate(Expression):
         # TODO order_by
         super(Aggregate, self).__init__()
         self.expression = expression
+
+        self._distinct = None
+        self._within = None
+        self._filter = None
+        self._window = None
+
         self.distinct = distinct
         self.within = within
         self.filter_ = filter_

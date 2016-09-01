@@ -63,6 +63,8 @@ class Function(Expression, FromItem):
 
     def __init__(self, *args, **kwargs):
         self.args = args
+
+        self._columns_definitions = None
         self.columns_definitions = kwargs.get('columns_definitions', [])
 
     @property
@@ -313,6 +315,7 @@ class Trim(Function):
 
     def __init__(self, string, position='BOTH', characters=' '):
         assert position.upper() in ('LEADING', 'TRAILING', 'BOTH')
+        super(Function, self).__init__()
         self.position = position.upper()
         self.characters = characters
         self.string = string
@@ -468,6 +471,7 @@ class AtTimeZone(Function):
     __slots__ = ('field', 'zone')
 
     def __init__(self, field, zone):
+        super(Function, self).__init__()
         self.field = field
         self.zone = zone
 
@@ -491,8 +495,11 @@ class WindowFunction(Function):
     __slots__ = ('_filter', '_window')
 
     def __init__(self, *args, **kwargs):
-        self.filter_ = kwargs.pop('filter_', None)
-        self.window = kwargs['window']
+        self._filter = None
+        self._window = None
+
+        self.filter_ = kwargs.get('filter_')
+        self.window = kwargs.get('window')
         super(WindowFunction, self).__init__(*args, **kwargs)
 
     @property
