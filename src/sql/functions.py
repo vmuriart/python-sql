@@ -34,28 +34,29 @@ from itertools import chain
 from sql import Expression, Flavor, FromItem, Window
 from sql._compat import string_types, text_type, map, zip
 
-__all__ = [
-    'Abs', 'Cbrt', 'Ceil', 'Degrees', 'Div', 'Exp', 'Floor', 'Ln',
-    'Log', 'Mod', 'Pi', 'Power', 'Radians', 'Random', 'Round', 'SetSeed',
-    'Sign', 'Sqrt', 'Trunc', 'WidthBucket',
-    'Acos', 'Asin', 'Atan', 'Atan2', 'Cos', 'Cot', 'Sin', 'Tan',
-    'BitLength', 'CharLength', 'Overlay', 'Position', 'Substring', 'Trim',
-    'Upper',
-    'ToChar', 'ToDate', 'ToNumber', 'ToTimestamp',
-    'Age', 'ClockTimestamp', 'CurrentDate', 'CurrentTime', 'CurrentTimestamp',
-    'DatePart', 'DateTrunc', 'Extract', 'Isfinite', 'JustifyDays',
-    'JustifyHours', 'JustifyInterval', 'Localtime', 'Localtimestamp', 'Now',
-    'StatementTimestamp', 'Timeofday', 'TransactionTimestamp',
-    'AtTimeZone',
-    'RowNumber', 'Rank', 'DenseRank', 'PercentRank', 'CumeDist', 'Ntile',
-    'Lag', 'Lead', 'FirstValue', 'LastValue', 'NthValue']
+__all__ = ('Abs', 'Cbrt', 'Ceil', 'Degrees', 'Div', 'Exp', 'Floor', 'Ln',
+           'Log', 'Mod', 'Pi', 'Power', 'Radians', 'Random', 'Round',
+           'SetSeed', 'Sign', 'Sqrt', 'Trunc', 'WidthBucket',
+
+           'Acos', 'Asin', 'Atan', 'Atan2', 'Cos', 'Cot', 'Sin', 'Tan',
+           'BitLength', 'CharLength', 'Overlay', 'Position', 'Substring',
+           'Trim', 'Upper',
+
+           'ToChar', 'ToDate', 'ToNumber', 'ToTimestamp',
+
+           'Age', 'ClockTimestamp', 'CurrentDate', 'CurrentTime',
+           'CurrentTimestamp', 'DatePart', 'DateTrunc', 'Extract', 'Isfinite',
+           'JustifyDays', 'JustifyHours', 'JustifyInterval', 'Localtime',
+           'Localtimestamp', 'Now', 'StatementTimestamp', 'Timeofday',
+           'TransactionTimestamp', 'AtTimeZone',
+
+           'RowNumber', 'Rank', 'DenseRank', 'PercentRank', 'CumeDist',
+           'Ntile', 'Lag', 'Lead', 'FirstValue', 'LastValue', 'NthValue',)
 
 
 # Mathematical
-
-
 class Function(Expression, FromItem):
-    __slots__ = 'args', '_columns_definitions'
+    __slots__ = ('args', '_columns_definitions')
     table = ''
     name = ''
     _function = ''
@@ -82,17 +83,17 @@ class Function(Expression, FromItem):
             return Flavor().get().param
 
     def __str__(self):
-        Mapping = Flavor.get().function_mapping.get(self.__class__)
-        if Mapping:
-            return text_type(Mapping(*self.args))
+        mapping = Flavor.get().function_mapping.get(type(self))
+        if mapping:
+            return text_type(mapping(*self.args))
         return self._function + '(' + ', '.join(
             map(self._format, self.args)) + ')'
 
     @property
     def params(self):
-        Mapping = Flavor.get().function_mapping.get(self.__class__)
-        if Mapping:
-            return Mapping(*self.args).params
+        mapping = Flavor.get().function_mapping.get(type(self))
+        if mapping:
+            return mapping(*self.args).params
         p = []
         for arg in self.args:
             if isinstance(arg, Expression):
@@ -108,9 +109,9 @@ class FunctionKeyword(Function):
     _keywords = ()
 
     def __str__(self):
-        Mapping = Flavor.get().function_mapping.get(self.__class__)
-        if Mapping:
-            return text_type(Mapping(*self.args))
+        mapping = Flavor.get().function_mapping.get(type(self))
+        if mapping:
+            return text_type(mapping(*self.args))
         return self._function + '(' + ' '.join(chain(*list(zip(
             self._keywords, list(map(self._format, self.args))))))[1:] + ')'
 
@@ -120,9 +121,9 @@ class FunctionNotCallable(Function):
     _function = ''
 
     def __str__(self):
-        Mapping = Flavor.get().function_mapping.get(self.__class__)
-        if Mapping:
-            return text_type(Mapping(*self.args))
+        mapping = Flavor.get().function_mapping.get(type(self))
+        if mapping:
+            return text_type(mapping(*self.args))
         return self._function
 
 
@@ -227,8 +228,6 @@ class WidthBucket(Function):
 
 
 # Trigonometric
-
-
 class Acos(Function):
     __slots__ = ()
     _function = 'ACOS'
@@ -270,8 +269,6 @@ class Tan(Function):
 
 
 # String
-
-
 class BitLength(Function):
     __slots__ = ()
     _function = 'BIT_LENGTH'
@@ -322,10 +319,10 @@ class Trim(Function):
 
     def __str__(self):
         flavor = Flavor.get()
-        Mapping = flavor.function_mapping.get(self.__class__)
-        if Mapping:
+        mapping = flavor.function_mapping.get(type(self))
+        if mapping:
             return text_type(
-                Mapping(self.string, self.position, self.characters))
+                mapping(self.string, self.position, self.characters))
         param = flavor.param
 
         def format(arg):
@@ -339,9 +336,9 @@ class Trim(Function):
 
     @property
     def params(self):
-        Mapping = Flavor.get().function_mapping.get(self.__class__)
-        if Mapping:
-            return Mapping(self.string, self.position, self.characters).params
+        mapping = Flavor.get().function_mapping.get(type(self))
+        if mapping:
+            return mapping(self.string, self.position, self.characters).params
         p = []
         for arg in (self.characters, self.string):
             if isinstance(arg, string_types):
@@ -476,17 +473,17 @@ class AtTimeZone(Function):
 
     def __str__(self):
         flavor = Flavor.get()
-        Mapping = flavor.function_mapping.get(self.__class__)
-        if Mapping:
-            return text_type(Mapping(self.field, self.zone))
+        mapping = flavor.function_mapping.get(type(self))
+        if mapping:
+            return text_type(mapping(self.field, self.zone))
         param = flavor.param
         return '{0!s} AT TIME ZONE {1!s}'.format(text_type(self.field), param)
 
     @property
     def params(self):
-        Mapping = Flavor.get().function_mapping.get(self.__class__)
-        if Mapping:
-            return Mapping(self.field, self.zone).params
+        mapping = Flavor.get().function_mapping.get(type(self))
+        if mapping:
+            return mapping(self.field, self.zone).params
         return self.field.params + (self.zone,)
 
 

@@ -32,7 +32,7 @@
 from sql import Expression, Flavor
 from sql._compat import text_type, map
 
-__all__ = 'Case', 'Coalesce', 'NullIf', 'Greatest', 'Least'
+__all__ = ('Case', 'Coalesce', 'NullIf', 'Greatest', 'Least')
 
 
 class Conditional(Expression):
@@ -50,7 +50,7 @@ class Conditional(Expression):
 
 
 class Case(Conditional):
-    __slots__ = 'whens', 'else_'
+    __slots__ = ('whens', 'else_')
 
     def __init__(self, *whens, **kwargs):
         self.whens = whens
@@ -87,7 +87,7 @@ class Case(Conditional):
 
 
 class Coalesce(Conditional):
-    __slots__ = 'values'
+    __slots__ = ('values',)
     _conditional = 'COALESCE'
 
     def __init__(self, *values):

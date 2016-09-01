@@ -32,16 +32,15 @@
 import warnings
 from array import array
 
-from sql import Expression, Select, CombiningQuery, Flavor, Null
+from sql import Expression, Flavor, Select, CombiningQuery, Null
+from sql.functions import Upper
 from sql._compat import text_type, map
 
-__all__ = [
-    'And', 'Or', 'Not', 'Less', 'Greater', 'LessEqual', 'GreaterEqual',
-    'Equal', 'NotEqual', 'Add', 'Sub', 'Mul', 'Div', 'FloorDiv', 'Mod', 'Pow',
-    'SquareRoot', 'CubeRoot', 'Factorial', 'Abs', 'BAnd', 'BOr', 'BXor',
-    'BNot', 'LShift', 'RShift', 'Concat', 'Like', 'NotLike', 'ILike',
-    'NotILike', 'In', 'NotIn', 'Exists', 'Any', 'Some', 'All'
-]
+__all__ = ('And', 'Or', 'Not', 'Less', 'Greater', 'LessEqual', 'GreaterEqual',
+           'Equal', 'NotEqual', 'Add', 'Sub', 'Mul', 'Div', 'Mod', 'Pow',
+           'SquareRoot', 'CubeRoot', 'Factorial', 'Abs', 'BAnd', 'BOr', 'BXor',
+           'BNot', 'LShift', 'RShift', 'Concat', 'Like', 'NotLike', 'ILike',
+           'NotILike', 'In', 'NotIn', 'Exists', 'Any', 'Some', 'All',)
 
 
 class Operator(Expression):
@@ -109,7 +108,7 @@ class Operator(Expression):
 
 
 class UnaryOperator(Operator):
-    __slots__ = 'operand'
+    __slots__ = ('operand',)
     _operator = ''
 
     def __init__(self, operand):
@@ -125,7 +124,7 @@ class UnaryOperator(Operator):
 
 
 class BinaryOperator(Operator):
-    __slots__ = 'left', 'right'
+    __slots__ = ('left', 'right')
     _operator = ''
 
     def __init__(self, left, right):
@@ -142,7 +141,7 @@ class BinaryOperator(Operator):
             self._format(left), self._operator, self._format(right))
 
     def __invert__(self):
-        return _INVERT[self.__class__](self.left, self.right)
+        return _INVERT[type(self)](self.left, self.right)
 
 
 class NaryOperator(list, Operator):
@@ -362,7 +361,6 @@ class ILike(BinaryOperator):
     def _operands(self):
         operands = super(ILike, self)._operands
         if not Flavor.get().ilike:
-            from .functions import Upper
             operands = tuple(Upper(o) for o in operands)
         return operands
 
@@ -379,8 +377,6 @@ class NotILike(ILike):
 
 
 # TODO SIMILAR
-
-
 class In(BinaryOperator):
     __slots__ = ()
     _operator = 'IN'
@@ -396,18 +392,17 @@ class Exists(UnaryOperator):
     _operator = 'EXISTS'
 
 
+class All(UnaryOperator):
+    __slots__ = ()
+    _operator = 'ALL'
+
+
 class Any(UnaryOperator):
     __slots__ = ()
     _operator = 'ANY'
 
 
 Some = Any
-
-
-class All(UnaryOperator):
-    __slots__ = ()
-    _operator = 'ALL'
-
 
 _INVERT = {
     Less: GreaterEqual,

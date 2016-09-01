@@ -31,10 +31,6 @@
 
 from __future__ import division
 
-__version__ = '0.9.0-dev0'
-__all__ = ['Flavor', 'Table', 'Values', 'Literal', 'Column', 'Join',
-           'Asc', 'Desc', 'NullsFirst', 'NullsLast', 'format2numeric']
-
 import string
 import warnings
 from threading import local, currentThread
@@ -42,10 +38,13 @@ from collections import defaultdict
 
 from sql._compat import integer_types, text_type, map, zip
 
+__version__ = '0.9.0-dev0'
+__all__ = ('Flavor', 'Table', 'Values', 'Literal', 'Column', 'Join',
+           'Asc', 'Desc', 'NullsFirst', 'NullsLast', 'format2numeric')
+
 
 def alias(i, letters=string.ascii_lowercase):
-    '''
-    Generate a unique alias based on integer
+    """Generate a unique alias based on integer
 
     >>> [alias(n) for n in range(6)]
     ['a', 'b', 'c', 'd', 'e', 'f']
@@ -53,7 +52,7 @@ def alias(i, letters=string.ascii_lowercase):
     ['ba', 'bb', 'bc', 'bd']
     >>> [alias(26**n) for n in range(5)]
     ['b', 'ba', 'baa', 'baaa', 'baaaa']
-    '''
+    """
     s = ''
     length = len(letters)
     while True:
@@ -66,8 +65,7 @@ def alias(i, letters=string.ascii_lowercase):
 
 
 class Flavor(object):
-    '''
-    Contains the flavor of SQL
+    """Contains the flavor of SQL
 
     Contains:
         limitstyle - state the type of pagination
@@ -77,12 +75,11 @@ class Flavor(object):
         no_as - doesn't support AS keyword for column and table
         null_ordering - support NULL ordering
         function_mapping - dictionary with Function to replace
-    '''
+    """
 
     def __init__(self, limitstyle='limit', max_limit=None, paramstyle='format',
                  ilike=False, no_as=False, no_boolean=False,
-                 null_ordering=True,
-                 function_mapping=None):
+                 null_ordering=True, function_mapping=None):
         assert limitstyle in ['fetch', 'limit', 'rownum']
         self.limitstyle = limitstyle
         self.max_limit = max_limit
@@ -102,17 +99,17 @@ class Flavor(object):
 
     @staticmethod
     def set(flavor):
-        '''Set this thread's flavor to flavor.'''
+        """Set this thread's flavor to flavor.
+        """
         currentThread().__sql_flavor__ = flavor
 
     @staticmethod
     def get():
-        '''
-        Return this thread's flavor.
+        """Return this thread's flavor.
 
         If this thread does not yet have a flavor, returns a new flavor and
         sets this thread's flavor.
-        '''
+        """
         try:
             return currentThread().__sql_flavor__
         except AttributeError:
@@ -122,9 +119,8 @@ class Flavor(object):
 
 
 class AliasManager(object):
-    '''
-    Context Manager for unique alias generation
-    '''
+    """Context Manager for unique alias generation
+    """
     __slots__ = ()
 
     local = local()
@@ -174,16 +170,16 @@ class AliasManager(object):
 
 
 def format2numeric(query, params):
-    '''
-    Convert format paramstyle query to numeric paramstyle
+    """Convert format paramstyle query to numeric paramstyle
 
     >>> format2numeric('SELECT * FROM table WHERE col = %s', ('foo',))
     ('SELECT * FROM table WHERE col = :0', ('foo',))
     >>> format2numeric('SELECT * FROM table WHERE col1 = %s AND col2 = %s',
     ...     ('foo', 'bar'))
     ('SELECT * FROM table WHERE col1 = :0 AND col2 = :1', ('foo', 'bar'))
-    '''
-    return (query % tuple(':{0:d}'.format(i) for i, _ in enumerate(params)), params)
+    """
+    return (query % tuple(':{0:d}'.format(i)
+                          for i, _ in enumerate(params)), params)
 
 
 class Query(object):
@@ -232,9 +228,8 @@ class WithQuery(Query):
             return ''
         recursive = (' RECURSIVE' if any(w.recursive for w in self.with_)
                      else '')
-        with_ = ('WITH{0!s} '.format(recursive)
-                 + ', '.join(w.statement() for w in self.with_)
-                 + ' ')
+        with_ = 'WITH{0!s} '.format(recursive) + ', '.join(
+            w.statement() for w in self.with_) + ' '
         return with_
 
     def _with_params(self):
@@ -298,9 +293,11 @@ class With(FromItem):
         super(With, self).__init__(**kwargs)
 
     def statement(self):
-        columns = (' ({0!s})'.format(', '.join('"{0!s}"'.format(c) for c in self.columns))
-                   if self.columns else '')
-        return '"{0!s}"{1!s} AS ({2!s})'.format(self.alias, columns, self.query)
+        columns = ' ({0!s})'.format(
+            ', '.join('"{0!s}"'.format(c) for c in self.columns)
+        ) if self.columns else ''
+        return '"{0!s}"{1!s} AS ({2!s})'.format(
+            self.alias, columns, self.query)
 
     def statement_params(self):
         return self.query.params
@@ -481,12 +478,12 @@ class Select(FromItem, SelectQuery):
             window_function = None
             if isinstance(column, (WindowFunction, Aggregate)):
                 window_function = column
-            elif (isinstance(column, As)
-                  and isinstance(column.expression,
-                                 (WindowFunction, Aggregate))):
+            elif isinstance(column, As) and isinstance(column.expression,
+                                                       (WindowFunction,
+                                                        Aggregate)):
                 window_function = column.expression
-            if (window_function and window_function.window
-                and window_function.window not in windows):
+            if window_function and window_function.window and (
+                    window_function.window not in windows):
                 windows.add(window_function.window)
                 yield window_function
 
@@ -528,8 +525,8 @@ class Select(FromItem, SelectQuery):
         return value
 
     def __str__(self):
-        if (Flavor.get().limitstyle == 'rownum'
-            and (self.limit is not None or self.offset is not None)):
+        if (Flavor.get().limitstyle == 'rownum' and
+                (self.limit is not None or self.offset is not None)):
             return self._rownum(str)
 
         with AliasManager():
@@ -556,15 +553,15 @@ class Select(FromItem, SelectQuery):
             for_ = ''
             if self.for_ is not None:
                 for_ = ' ' + ' '.join(map(text_type, self.for_))
-            return (self._with_str()
-                    + 'SELECT {0!s} FROM {1!s}'.format(columns, from_)
-                    + where + group_by + having + window + self._order_by_str
-                    + self._limit_offset_str + for_)
+            return (self._with_str() +
+                    'SELECT {0!s} FROM {1!s}'.format(columns, from_) +
+                    where + group_by + having + window + self._order_by_str +
+                    self._limit_offset_str + for_)
 
     @property
     def params(self):
-        if (Flavor.get().limitstyle == 'rownum'
-            and (self.limit is not None or self.offset is not None)):
+        if (Flavor.get().limitstyle == 'rownum' and
+                (self.limit is not None or self.offset is not None)):
             return self._rownum(lambda q: q.params)
         p = []
         p.extend(self._with_params())
@@ -671,9 +668,8 @@ class Insert(WithQuery):
             returning = ' RETURNING ' + ', '.join(
                 map(text_type, self.returning))
         with AliasManager():
-            return (self._with_str()
-                    + 'INSERT INTO {0!s}'.format(self.table) + columns
-                    + values + returning)
+            return (self._with_str() + 'INSERT INTO {0!s}'.format(self.table) +
+                    columns + values + returning)
 
     @property
     def params(self):
@@ -742,8 +738,8 @@ class Update(Insert):
             if self.returning:
                 returning = ' RETURNING ' + ', '.join(
                     map(text_type, self.returning))
-            return (self._with_str() + 'UPDATE {0!s} SET '.format(table) + values + from_
-                    + where + returning)
+            return (self._with_str() + 'UPDATE {0!s} SET '.format(table) +
+                    values + from_ + where + returning)
 
     @property
     def params(self):
@@ -846,7 +842,8 @@ class CombiningQuery(FromItem, SelectQuery):
 
     def __str__(self):
         with AliasManager():
-            operator = ' {0!s} {1!s}'.format(self._operator, 'ALL ' if self.all_ else '')
+            operator = ' {0!s} {1!s}'.format(
+                self._operator, 'ALL ' if self.all_ else '')
             return (operator.join(map(text_type, self.queries)) +
                     self._order_by_str + self._limit_offset_str)
 
@@ -974,8 +971,8 @@ class Join(FromItem):
         self._type_ = value
 
     def __str__(self):
-        join = '{0!s} {1!s} JOIN {2!s}'.format(From([self.left]), self.type_,
-                                  From([self.right]))
+        join = '{0!s} {1!s} JOIN {2!s}'.format(
+            From([self.left]), self.type_, From([self.right]))
         if self.condition:
             condition = ' ON {0!s}'.format(self.condition)
         else:
@@ -1016,17 +1013,16 @@ class From(list):
                 template = '(%s)'
             alias = getattr(from_, 'alias', None)
             # TODO column_alias
-            columns_definitions = getattr(from_, 'columns_definitions',
-                                          None)
+            columns_definitions = getattr(from_, 'columns_definitions', None)
             if Flavor.get().no_as:
                 alias_template = ' "%s"'
             else:
                 alias_template = ' AS "%s"'
             # XXX find a better test for __getattr__ which returns Column
-            if (alias and columns_definitions
-                and not isinstance(columns_definitions, Column)):
-                return (template + alias_template + ' (%s)') % (from_, alias,
-                                                                columns_definitions)
+            if (alias and columns_definitions and
+                    not isinstance(columns_definitions, Column)):
+                return (template + alias_template + ' (%s)') % (
+                    from_, alias, columns_definitions)
             elif alias:
                 return (template + alias_template) % (from_, alias)
             else:
@@ -1212,7 +1208,7 @@ class Expression(object):
 
 
 class Literal(Expression):
-    __slots__ = ('_value')
+    __slots__ = ('_value',)
 
     def __init__(self, value):
         super(Literal, self).__init__()
@@ -1236,10 +1232,7 @@ class Literal(Expression):
         if Flavor.get().no_boolean:
             if self._value is True or self._value is False:
                 return ()
-        return (self._value,)
-
-
-Null = None
+        return self._value,
 
 
 class _Rownum(Expression):
@@ -1249,9 +1242,6 @@ class _Rownum(Expression):
     @property
     def params(self):
         return ()
-
-
-_rownum = _Rownum()
 
 
 class Column(Expression):
@@ -1323,7 +1313,7 @@ class Cast(Expression):
         if isinstance(self.expression, Expression):
             return self.expression.params
         else:
-            return (self.expression,)
+            return self.expression,
 
 
 class Window(object):
@@ -1421,7 +1411,8 @@ class Window(object):
         if self.frame:
             start = format(self.start, 'PRECEDING')
             end = format(self.end, 'FOLLOWING')
-            frame = ' {0!s} BETWEEN {1!s} AND {2!s}'.format(self.frame, start, end)
+            frame = ' {0!s} BETWEEN {1!s} AND {2!s}'.format(
+                self.frame, start, end)
         return partition + order_by + frame
 
     @property
@@ -1437,7 +1428,7 @@ class Window(object):
 
 
 class Order(Expression):
-    __slots__ = ('_expression')
+    __slots__ = ('_expression',)
     _sql = ''
 
     def __init__(self, expression):
@@ -1476,7 +1467,7 @@ class Desc(Order):
 
 
 class NullOrder(Expression):
-    __slots__ = ('expression')
+    __slots__ = ('expression',)
     _sql = ''
 
     def __init__(self, expression):
@@ -1516,7 +1507,7 @@ class NullsFirst(NullOrder):
     _sql = 'FIRST'
 
     def _case_values(self):
-        return (0, 1)
+        return 0, 1
 
 
 class NullsLast(NullOrder):
@@ -1524,7 +1515,7 @@ class NullsLast(NullOrder):
     _sql = 'LAST'
 
     def _case_values(self):
-        return (1, 0)
+        return 1, 0
 
 
 class For(object):
@@ -1566,3 +1557,7 @@ class For(object):
         if self.nowait:
             nowait = ' NOWAIT'
         return ('FOR {0!s}'.format(self.type_)) + tables + nowait
+
+
+Null = None
+_rownum = _Rownum()
