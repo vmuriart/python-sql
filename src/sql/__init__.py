@@ -144,7 +144,7 @@ class AliasManager(object):
         cls.local.nested += 1
 
     @classmethod
-    def __exit__(cls, type, value, traceback):
+    def __exit__(cls, type_, value, traceback):
         cls.local.nested -= 1
         if not cls.local.nested:
             cls.local.alias = None
@@ -159,9 +159,9 @@ class AliasManager(object):
         return cls.local.alias[id(from_)]
 
     @classmethod
-    def set(cls, from_, alias):
+    def set(cls, from_, alias_):
         assert cls.local.alias.get(from_) is None
-        cls.local.alias[id(from_)] = alias
+        cls.local.alias[id(from_)] = alias_
 
     @classmethod
     def alias_factory(cls):
@@ -492,7 +492,7 @@ class Select(FromItem, SelectQuery):
 
         def columns(table):
             if aliases and all(aliases):
-                return [Column(table, alias) for alias in aliases]
+                return [Column(table, alias_) for alias_ in aliases]
             else:
                 return [Column(table, '*')]
 
@@ -1006,11 +1006,11 @@ class From(list):
         return Select(args, from_=self, **kwargs)
 
     def __str__(self):
-        def format(from_):
+        def format_(from_):
             template = '%s'
             if isinstance(from_, Query):
                 template = '(%s)'
-            alias = getattr(from_, 'alias', None)
+            alias_ = getattr(from_, 'alias', None)
             # TODO column_alias
             columns_definitions = getattr(from_, 'columns_definitions', None)
             if Flavor.get().no_as:
@@ -1018,16 +1018,16 @@ class From(list):
             else:
                 alias_template = ' AS "%s"'
             # XXX find a better test for __getattr__ which returns Column
-            if (alias and columns_definitions and
+            if (alias_ and columns_definitions and
                     not isinstance(columns_definitions, Column)):
                 return (template + alias_template + ' (%s)') % (
-                    from_, alias, columns_definitions)
-            elif alias:
-                return (template + alias_template) % (from_, alias)
+                    from_, alias_, columns_definitions)
+            elif alias_:
+                return (template + alias_template) % (from_, alias_)
             else:
                 return template % from_
 
-        return ', '.join(map(format, self))
+        return ', '.join(map(format_, self))
 
     @property
     def params(self):
@@ -1263,10 +1263,10 @@ class Column(Expression):
             t = '%s'
         else:
             t = '"%s"'
-        alias = self._from.alias
-        if alias:
+        alias_ = self._from.alias
+        if alias_:
             t = '"%s".' + t
-            return t % (alias, self._name)
+            return t % (alias_, self._name)
         else:
             return t % self._name
 
@@ -1395,20 +1395,20 @@ class Window(object):
         if self.order_by:
             order_by = ' ORDER BY ' + ', '.join(map(text_type, self.order_by))
 
-        def format(frame, direction):
-            if frame is None:
+        def format_(frame_, direction):
+            if frame_ is None:
                 return 'UNBOUNDED {0}'.format(direction)
-            elif not frame:
+            elif not frame_:
                 return 'CURRENT ROW'
-            elif frame < 0:
-                return '{0} PRECEDING'.format(-frame)
-            elif frame > 0:
-                return '{0} FOLLOWING'.format(frame)
+            elif frame_ < 0:
+                return '{0} PRECEDING'.format(-frame_)
+            elif frame_ > 0:
+                return '{0} FOLLOWING'.format(frame_)
 
         frame = ''
         if self.frame:
-            start = format(self.start, 'PRECEDING')
-            end = format(self.end, 'FOLLOWING')
+            start = format_(self.start, 'PRECEDING')
+            end = format_(self.end, 'FOLLOWING')
             frame = ' {0} BETWEEN {1} AND {2}'.format(
                 self.frame, start, end)
         return partition + order_by + frame

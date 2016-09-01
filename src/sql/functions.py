@@ -325,14 +325,14 @@ class Trim(Function):
                 mapping(self.string, self.position, self.characters))
         param = flavor.param
 
-        def format(arg):
+        def format_(arg):
             if isinstance(arg, string_types):
                 return param
             else:
                 return text_type(arg)
 
         return self._function + '({0} {1} FROM {2})'.format(
-            self.position, format(self.characters), format(self.string))
+            self.position, format_(self.characters), format_(self.string))
 
     @property
     def params(self):
