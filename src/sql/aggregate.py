@@ -29,7 +29,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from sql import Expression, Window
+from sql import Expression
 from sql._compat import text_type, map
 
 __all__ = ('Avg', 'BitAnd', 'BitOr', 'BoolAnd', 'BoolOr', 'Count', 'Every',
@@ -62,7 +62,6 @@ class Aggregate(Expression):
 
     @distinct.setter
     def distinct(self, value):
-        assert isinstance(value, bool)
         self._distinct = value
 
     @property
@@ -74,7 +73,6 @@ class Aggregate(Expression):
         if value is not None:
             if isinstance(value, Expression):
                 value = [value]
-            assert all(isinstance(col, Expression) for col in value)
         self._within = value
 
     @property
@@ -83,9 +81,6 @@ class Aggregate(Expression):
 
     @filter_.setter
     def filter_(self, value):
-        from sql.operators import And, Or
-        if value is not None:
-            assert isinstance(value, (Expression, And, Or))
         self._filter = value
 
     @property
@@ -94,8 +89,6 @@ class Aggregate(Expression):
 
     @window.setter
     def window(self, value):
-        if value:
-            assert isinstance(value, Window)
         self._window = value
 
     def __str__(self):

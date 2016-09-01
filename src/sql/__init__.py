@@ -35,7 +35,7 @@ import string
 from threading import local, currentThread
 from collections import defaultdict
 
-from sql._compat import integer_types, text_type, map, zip
+from sql._compat import text_type, map, zip
 
 __version__ = '0.9.0-dev0'
 __all__ = ('Flavor', 'Table', 'Values', 'Literal', 'Column', 'Join',
@@ -79,7 +79,6 @@ class Flavor(object):
     def __init__(self, limitstyle='limit', max_limit=None, paramstyle='format',
                  ilike=False, no_as=False, no_boolean=False,
                  null_ordering=True, function_mapping=None):
-        assert limitstyle in ['fetch', 'limit', 'rownum']
         self.limitstyle = limitstyle
         self.max_limit = max_limit
         self.paramstyle = paramstyle
@@ -159,7 +158,6 @@ class AliasManager(object):
 
     @classmethod
     def set(cls, from_, alias_):
-        assert cls.local.alias.get(from_) is None
         cls.local.alias[id(from_)] = alias_
 
     @classmethod
@@ -219,7 +217,6 @@ class WithQuery(Query):
         if value is not None:
             if isinstance(value, With):
                 value = [value]
-            assert all(isinstance(w, With) for w in value)
         self._with = value
 
     def _with_str(self):
@@ -253,7 +250,6 @@ class FromItem(object):
         return Column(self, name)
 
     def __add__(self, other):
-        assert isinstance(other, FromItem)
         return From((self, other))
 
     def select(self, *args, **kwargs):
@@ -329,7 +325,6 @@ class SelectQuery(WithQuery):
         if value is not None:
             if isinstance(value, Expression):
                 value = [value]
-            assert all(isinstance(col, Expression) for col in value)
         self._order_by = value
 
     @property
@@ -345,8 +340,6 @@ class SelectQuery(WithQuery):
 
     @limit.setter
     def limit(self, value):
-        if value is not None:
-            assert isinstance(value, integer_types)
         self._limit = value
 
     @property
@@ -355,8 +348,6 @@ class SelectQuery(WithQuery):
 
     @offset.setter
     def offset(self, value):
-        if value is not None:
-            assert isinstance(value, integer_types)
         self._offset = value
 
     @property
@@ -409,7 +400,6 @@ class Select(FromItem, SelectQuery):
 
     @columns.setter
     def columns(self, value):
-        assert all(isinstance(col, Expression) for col in value)
         self._columns = tuple(value)
 
     @property
@@ -418,9 +408,6 @@ class Select(FromItem, SelectQuery):
 
     @where.setter
     def where(self, value):
-        from sql.operators import And, Or
-        if value is not None:
-            assert isinstance(value, (Expression, And, Or))
         self._where = value
 
     @property
@@ -432,7 +419,6 @@ class Select(FromItem, SelectQuery):
         if value is not None:
             if isinstance(value, Expression):
                 value = [value]
-            assert all(isinstance(col, Expression) for col in value)
         self._group_by = value
 
     @property
@@ -441,9 +427,6 @@ class Select(FromItem, SelectQuery):
 
     @having.setter
     def having(self, value):
-        from sql.operators import And, Or
-        if value is not None:
-            assert isinstance(value, (Expression, And, Or))
         self._having = value
 
     @property
@@ -455,7 +438,6 @@ class Select(FromItem, SelectQuery):
         if value is not None:
             if isinstance(value, For):
                 value = [value]
-            assert all(isinstance(f, For) for f in value)
         self._for_ = value
 
     @staticmethod
@@ -604,7 +586,6 @@ class Insert(WithQuery):
 
     @table.setter
     def table(self, value):
-        assert isinstance(value, Table)
         self._table = value
 
     @property
@@ -613,9 +594,6 @@ class Insert(WithQuery):
 
     @columns.setter
     def columns(self, value):
-        if value is not None:
-            assert all(isinstance(col, Column) for col in value)
-            assert all(col.table == self.table for col in value)
         self._columns = value
 
     @property
@@ -624,8 +602,6 @@ class Insert(WithQuery):
 
     @values.setter
     def values(self, value):
-        if value is not None:
-            assert isinstance(value, (list, Select))
         if isinstance(value, list):
             value = Values(value)
         self._values = value
@@ -636,8 +612,6 @@ class Insert(WithQuery):
 
     @returning.setter
     def returning(self, value):
-        if value is not None:
-            assert isinstance(value, list)
         self._returning = value
 
     @staticmethod
@@ -654,7 +628,6 @@ class Insert(WithQuery):
     def __str__(self):
         columns = ''
         if self.columns:
-            assert all(col.table == self.table for col in self.columns)
             columns = ' (' + ', '.join(map(text_type, self.columns)) + ')'
         if isinstance(self.values, Query):
             values = ' {0}'.format(text_type(self.values))
@@ -700,7 +673,6 @@ class Update(Insert):
     def values(self, value):
         if isinstance(value, Select):
             value = [value]
-        assert isinstance(value, list)
         self._values = value
 
     @property
@@ -709,13 +681,9 @@ class Update(Insert):
 
     @where.setter
     def where(self, value):
-        from sql.operators import And, Or
-        if value is not None:
-            assert isinstance(value, (Expression, And, Or))
         self._where = value
 
     def __str__(self):
-        assert all(col.table == self.table for col in self.columns)
         # Get columns without alias
         columns = list(map(text_type, self.columns))
 
@@ -779,7 +747,6 @@ class Delete(WithQuery):
 
     @table.setter
     def table(self, value):
-        assert isinstance(value, Table)
         self._table = value
 
     @property
@@ -788,9 +755,6 @@ class Delete(WithQuery):
 
     @where.setter
     def where(self, value):
-        from sql.operators import And, Or
-        if value is not None:
-            assert isinstance(value, (Expression, And, Or))
         self._where = value
 
     @property
@@ -799,8 +763,6 @@ class Delete(WithQuery):
 
     @returning.setter
     def returning(self, value):
-        if value is not None:
-            assert isinstance(value, list)
         self._returning = value
 
     def __str__(self):
@@ -833,7 +795,6 @@ class CombiningQuery(FromItem, SelectQuery):
     _operator = ''
 
     def __init__(self, *queries, **kwargs):
-        assert all(isinstance(q, Query) for q in queries)
         self.queries = queries
         self.all_ = kwargs.get('all_')
         super(CombiningQuery, self).__init__(**kwargs)
@@ -927,7 +888,6 @@ class Join(FromItem):
 
     @left.setter
     def left(self, value):
-        assert isinstance(value, FromItem)
         self._left = value
 
     @property
@@ -936,7 +896,6 @@ class Join(FromItem):
 
     @right.setter
     def right(self, value):
-        assert isinstance(value, FromItem)
         self._right = value
 
     @property
@@ -945,9 +904,6 @@ class Join(FromItem):
 
     @condition.setter
     def condition(self, value):
-        from sql.operators import And, Or
-        if value is not None:
-            assert isinstance(value, (Expression, And, Or))
         self._condition = value
 
     @property
@@ -957,8 +913,6 @@ class Join(FromItem):
     @type_.setter
     def type_(self, value):
         value = value.upper()
-        assert value in ('INNER', 'LEFT', 'LEFT OUTER',
-                         'RIGHT', 'RIGHT OUTER', 'FULL', 'FULL OUTER', 'CROSS')
         self._type_ = value
 
     def __str__(self):
@@ -1029,8 +983,6 @@ class From(list):
         return tuple(p)
 
     def __add__(self, other):
-        assert isinstance(other, FromItem)
-        assert not isinstance(other, CombiningQuery)
         return From(super(From, self).__add__([other]))
 
 
@@ -1329,7 +1281,6 @@ class Window(object):
 
     @partition.setter
     def partition(self, value):
-        assert all(isinstance(e, Expression) for e in value)
         self._partition = value
 
     @property
@@ -1341,7 +1292,6 @@ class Window(object):
         if value is not None:
             if isinstance(value, Expression):
                 value = [value]
-            assert all(isinstance(col, Expression) for col in value)
         self._order_by = value
 
     @property
@@ -1350,8 +1300,6 @@ class Window(object):
 
     @frame.setter
     def frame(self, value):
-        if value:
-            assert value in ['RANGE', 'ROWS']
         self._frame = value
 
     @property
@@ -1360,8 +1308,6 @@ class Window(object):
 
     @start.setter
     def start(self, value):
-        if value:
-            assert isinstance(value, integer_types)
         self._start = value
 
     @property
@@ -1370,8 +1316,6 @@ class Window(object):
 
     @end.setter
     def end(self, value):
-        if value:
-            assert isinstance(value, integer_types)
         self._end = value
 
     @property
@@ -1433,7 +1377,6 @@ class Order(Expression):
 
     @expression.setter
     def expression(self, value):
-        assert isinstance(value, (Expression, SelectQuery))
         self._expression = value
 
     def __str__(self):
@@ -1526,7 +1469,6 @@ class For(object):
     def tables(self, value):
         if not isinstance(value, list):
             value = [value]
-        all(isinstance(table, Table) for table in value)
         self._tables = value
 
     @property
@@ -1536,7 +1478,6 @@ class For(object):
     @type_.setter
     def type_(self, value):
         value = value.upper()
-        assert value in ('UPDATE', 'SHARE')
         self._type_ = value
 
     def __str__(self):

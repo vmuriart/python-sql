@@ -31,7 +31,7 @@
 
 from itertools import chain
 
-from sql import Expression, Flavor, FromItem, Window
+from sql import Expression, Flavor, FromItem
 from sql._compat import string_types, text_type, map, zip
 
 __all__ = ('Abs', 'Cbrt', 'Ceil', 'Degrees', 'Div', 'Exp', 'Floor', 'Ln',
@@ -74,7 +74,6 @@ class Function(Expression, FromItem):
 
     @columns_definitions.setter
     def columns_definitions(self, value):
-        assert isinstance(value, list)
         self._columns_definitions = value
 
     @staticmethod
@@ -314,7 +313,6 @@ class Trim(Function):
     _function = 'TRIM'
 
     def __init__(self, string, position='BOTH', characters=' '):
-        assert position.upper() in ('LEADING', 'TRAILING', 'BOTH')
         super(Function, self).__init__()
         self.position = position.upper()
         self.characters = characters
@@ -508,9 +506,6 @@ class WindowFunction(Function):
 
     @filter_.setter
     def filter_(self, value):
-        from sql.operators import And, Or
-        if value is not None:
-            assert isinstance(value, (Expression, And, Or))
         self._filter = value
 
     @property
@@ -519,8 +514,6 @@ class WindowFunction(Function):
 
     @window.setter
     def window(self, value):
-        if value:
-            assert isinstance(value, Window)
         self._window = value
 
     def __str__(self):
