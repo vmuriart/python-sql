@@ -29,7 +29,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import division
+from __future__ import unicode_literals
 
 import string
 import warnings
@@ -526,7 +526,7 @@ class Select(FromItem, SelectQuery):
     def __str__(self):
         if (Flavor.get().limitstyle == 'rownum' and
                 (self.limit is not None or self.offset is not None)):
-            return self._rownum(str)
+            return self._rownum(text_type)
 
         with AliasManager():
             from_ = text_type(self.from_)
