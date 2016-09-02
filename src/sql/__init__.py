@@ -304,10 +304,12 @@ class With(FromItem):
 
 
 class SelectQuery(WithQuery):
-    __slots__ = ('_order_by', 'limit', 'offset')
+    __slots__ = ('_order_by', '_limit', '_offset')
 
     def __init__(self, **kwargs):
         self._order_by = None
+        self._limit = None
+        self._offset = None
         self.order_by = kwargs.get('order_by')
         self.limit = kwargs.get('limit')
         self.offset = kwargs.get('offset')
@@ -329,6 +331,22 @@ class SelectQuery(WithQuery):
         if self.order_by:
             order_by = ' ORDER BY ' + ', '.join(map(text_type, self.order_by))
         return order_by
+
+    @property
+    def limit(self):
+        return self._limit
+
+    @limit.setter
+    def limit(self, value):
+        self._limit = value
+
+    @property
+    def offset(self):
+        return self._offset
+
+    @offset.setter
+    def offset(self, value):
+        self._offset = value
 
     @property
     def _limit_offset_str(self):
