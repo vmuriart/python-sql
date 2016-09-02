@@ -490,31 +490,12 @@ class AtTimeZone(Function):
 
 
 class WindowFunction(Function):
-    __slots__ = ('_filter', '_window')
+    __slots__ = ('filter_', 'window')
 
     def __init__(self, *args, **kwargs):
-        self._filter = None
-        self._window = None
-
         self.filter_ = kwargs.get('filter_')
         self.window = kwargs.get('window')
         super(WindowFunction, self).__init__(*args, **kwargs)
-
-    @property
-    def filter_(self):
-        return self._filter
-
-    @filter_.setter
-    def filter_(self, value):
-        self._filter = value
-
-    @property
-    def window(self):
-        return self._window
-
-    @window.setter
-    def window(self, value):
-        self._window = value
 
     def __str__(self):
         function = super(WindowFunction, self).__str__()

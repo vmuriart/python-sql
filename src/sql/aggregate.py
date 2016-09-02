@@ -37,7 +37,7 @@ __all__ = ('Avg', 'BitAnd', 'BitOr', 'BoolAnd', 'BoolOr', 'Count', 'Every',
 
 
 class Aggregate(Expression):
-    __slots__ = ('expression', '_distinct', '_within', '_filter', '_window')
+    __slots__ = ('expression', 'distinct', '_within', 'filter_', 'window')
     _sql = ''
 
     def __init__(self, expression, distinct=False, within=None, filter_=None,
@@ -46,23 +46,12 @@ class Aggregate(Expression):
         super(Aggregate, self).__init__()
         self.expression = expression
 
-        self._distinct = None
         self._within = None
-        self._filter = None
-        self._window = None
+        self.within = within
 
         self.distinct = distinct
-        self.within = within
         self.filter_ = filter_
         self.window = window
-
-    @property
-    def distinct(self):
-        return self._distinct
-
-    @distinct.setter
-    def distinct(self, value):
-        self._distinct = value
 
     @property
     def within(self):
@@ -70,26 +59,9 @@ class Aggregate(Expression):
 
     @within.setter
     def within(self, value):
-        if value is not None:
-            if isinstance(value, Expression):
-                value = [value]
+        if isinstance(value, Expression):
+            value = [value]
         self._within = value
-
-    @property
-    def filter_(self):
-        return self._filter
-
-    @filter_.setter
-    def filter_(self, value):
-        self._filter = value
-
-    @property
-    def window(self):
-        return self._window
-
-    @window.setter
-    def window(self, value):
-        self._window = value
 
     def __str__(self):
         quantifier = 'DISTINCT ' if self.distinct else ''
