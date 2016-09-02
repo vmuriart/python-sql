@@ -214,9 +214,8 @@ class WithQuery(Query):
 
     @with_.setter
     def with_(self, value):
-        if value is not None:
-            if isinstance(value, With):
-                value = [value]
+        if isinstance(value, With):
+            value = [value]
         self._with = value
 
     def _with_str(self):
@@ -305,12 +304,10 @@ class With(FromItem):
 
 
 class SelectQuery(WithQuery):
-    __slots__ = ('_order_by', '_limit', '_offset')
+    __slots__ = ('_order_by', 'limit', 'offset')
 
     def __init__(self, **kwargs):
         self._order_by = None
-        self._limit = None
-        self._offset = None
         self.order_by = kwargs.get('order_by')
         self.limit = kwargs.get('limit')
         self.offset = kwargs.get('offset')
@@ -322,9 +319,8 @@ class SelectQuery(WithQuery):
 
     @order_by.setter
     def order_by(self, value):
-        if value is not None:
-            if isinstance(value, Expression):
-                value = [value]
+        if isinstance(value, Expression):
+            value = [value]
         self._order_by = value
 
     @property
@@ -333,22 +329,6 @@ class SelectQuery(WithQuery):
         if self.order_by:
             order_by = ' ORDER BY ' + ', '.join(map(text_type, self.order_by))
         return order_by
-
-    @property
-    def limit(self):
-        return self._limit
-
-    @limit.setter
-    def limit(self, value):
-        self._limit = value
-
-    @property
-    def offset(self):
-        return self._offset
-
-    @offset.setter
-    def offset(self, value):
-        self._offset = value
 
     @property
     def _limit_offset_str(self):
@@ -375,15 +355,12 @@ class SelectQuery(WithQuery):
 
 
 class Select(FromItem, SelectQuery):
-    __slots__ = ('_columns', '_where', '_group_by', '_having', '_for_',
-                 'from_')
+    __slots__ = ('_columns', 'where', '_group_by', 'having', '_for_', 'from_')
 
     def __init__(self, columns, from_=None, where=None, group_by=None,
                  having=None, for_=None, **kwargs):
         self._columns = None
-        self._where = None
         self._group_by = None
-        self._having = None
         self._for_ = None
         super(Select, self).__init__(**kwargs)
         # TODO ALL|DISTINCT
@@ -403,31 +380,14 @@ class Select(FromItem, SelectQuery):
         self._columns = tuple(value)
 
     @property
-    def where(self):
-        return self._where
-
-    @where.setter
-    def where(self, value):
-        self._where = value
-
-    @property
     def group_by(self):
         return self._group_by
 
     @group_by.setter
     def group_by(self, value):
-        if value is not None:
-            if isinstance(value, Expression):
-                value = [value]
+        if isinstance(value, Expression):
+            value = [value]
         self._group_by = value
-
-    @property
-    def having(self):
-        return self._having
-
-    @having.setter
-    def having(self, value):
-        self._having = value
 
     @property
     def for_(self):
@@ -435,9 +395,8 @@ class Select(FromItem, SelectQuery):
 
     @for_.setter
     def for_(self, value):
-        if value is not None:
-            if isinstance(value, For):
-                value = [value]
+        if isinstance(value, For):
+            value = [value]
         self._for_ = value
 
     @staticmethod
@@ -566,35 +525,17 @@ class Select(FromItem, SelectQuery):
 
 
 class Insert(WithQuery):
-    __slots__ = ('_table', '_columns', '_values', '_returning')
+    __slots__ = ('table', 'columns', '_values', 'returning')
 
     def __init__(self, table, columns=None, values=None, returning=None,
                  **kwargs):
-        self._table = None
-        self._columns = None
         self._values = None
-        self._returning = None
+        self.values = values
+
         self.table = table
         self.columns = columns
-        self.values = values
         self.returning = returning
         super(Insert, self).__init__(**kwargs)
-
-    @property
-    def table(self):
-        return self._table
-
-    @table.setter
-    def table(self, value):
-        self._table = value
-
-    @property
-    def columns(self):
-        return self._columns
-
-    @columns.setter
-    def columns(self, value):
-        self._columns = value
 
     @property
     def values(self):
@@ -605,14 +546,6 @@ class Insert(WithQuery):
         if isinstance(value, list):
             value = Values(value)
         self._values = value
-
-    @property
-    def returning(self):
-        return self._returning
-
-    @returning.setter
-    def returning(self, value):
-        self._returning = value
 
     @staticmethod
     def _format(value, param=None):
@@ -655,13 +588,12 @@ class Insert(WithQuery):
 
 
 class Update(Insert):
-    __slots__ = ('_where', '_values', 'from_')
+    __slots__ = ('where', '_values', 'from_')
 
     def __init__(self, table, columns, values, from_=None, where=None,
                  returning=None, **kwargs):
         super(Update, self).__init__(table, columns=columns, values=values,
                                      returning=returning, **kwargs)
-        self._where = None
         self.from_ = From(from_) if from_ else None
         self.where = where
 
@@ -674,14 +606,6 @@ class Update(Insert):
         if isinstance(value, Select):
             value = [value]
         self._values = value
-
-    @property
-    def where(self):
-        return self._where
-
-    @where.setter
-    def where(self, value):
-        self._where = value
 
     def __str__(self):
         # Get columns without alias
@@ -727,43 +651,16 @@ class Update(Insert):
 
 
 class Delete(WithQuery):
-    __slots__ = ('_table', '_where', '_returning', 'only')
+    __slots__ = ('table', 'where', 'returning', 'only')
 
     def __init__(self, table, only=False, where=None, returning=None,
                  **kwargs):
-        self._table = None
-        self._where = None
-        self._returning = None
+        # TODO using (not standard)
         self.table = table
         self.only = only
-        # TODO using (not standard)
         self.where = where
         self.returning = returning
         super(Delete, self).__init__(**kwargs)
-
-    @property
-    def table(self):
-        return self._table
-
-    @table.setter
-    def table(self, value):
-        self._table = value
-
-    @property
-    def where(self):
-        return self._where
-
-    @where.setter
-    def where(self, value):
-        self._where = value
-
-    @property
-    def returning(self):
-        return self._returning
-
-    @returning.setter
-    def returning(self, value):
-        self._returning = value
 
     def __str__(self):
         with AliasManager(exclude=[self.table]):
@@ -870,41 +767,16 @@ class Table(FromItem):
 
 
 class Join(FromItem):
-    __slots__ = ('_left', '_right', '_condition', '_type_')
+    __slots__ = ('left', 'right', 'condition', '_type_')
 
     def __init__(self, left, right, type_='INNER', condition=None):
         super(Join, self).__init__()
-        self._left, self._right = None, None
-        self._condition = None
-        self._type_ = None
         self.left = left
         self.right = right
         self.condition = condition
+
+        self._type_ = None
         self.type_ = type_
-
-    @property
-    def left(self):
-        return self._left
-
-    @left.setter
-    def left(self, value):
-        self._left = value
-
-    @property
-    def right(self):
-        return self._right
-
-    @right.setter
-    def right(self, value):
-        self._right = value
-
-    @property
-    def condition(self):
-        return self._condition
-
-    @condition.setter
-    def condition(self, value):
-        self._condition = value
 
     @property
     def type_(self):
@@ -1150,31 +1022,27 @@ class Expression(object):
 
 
 class Literal(Expression):
-    __slots__ = ('_value',)
+    __slots__ = ('value',)
 
     def __init__(self, value):
         super(Literal, self).__init__()
-        self._value = value
-
-    @property
-    def value(self):
-        return self._value
+        self.value = value
 
     def __str__(self):
         flavor = Flavor.get()
         if flavor.no_boolean:
-            if self._value is True:
+            if self.value is True:
                 return '(1 = 1)'
-            elif self._value is False:
+            elif self.value is False:
                 return '(1 != 1)'
         return flavor.param
 
     @property
     def params(self):
         if Flavor.get().no_boolean:
-            if self._value is True or self._value is False:
+            if self.value is True or self.value is False:
                 return ()
-        return self._value,
+        return self.value,
 
 
 class _Rownum(Expression):
@@ -1187,32 +1055,28 @@ class _Rownum(Expression):
 
 
 class Column(Expression):
-    __slots__ = ('_from', '_name')
+    __slots__ = ('_from', 'name')
 
     def __init__(self, from_, name):
         super(Column, self).__init__()
         self._from = from_
-        self._name = name
+        self.name = name
 
     @property
     def table(self):
         return self._from
 
-    @property
-    def name(self):
-        return self._name
-
     def __str__(self):
-        if self._name == '*':
+        if self.name == '*':
             t = '%s'
         else:
             t = '"%s"'
         alias_ = self._from.alias
         if alias_:
             t = '"%s".' + t
-            return t % (alias_, self._name)
+            return t % (alias_, self.name)
         else:
-            return t % self._name
+            return t % self.name
 
     @property
     def params(self):
@@ -1259,16 +1123,12 @@ class Cast(Expression):
 
 
 class Window(object):
-    __slots__ = ('_partition', '_order_by', '_frame', '_start', '_end')
+    __slots__ = ('_order_by', 'partition', 'frame', 'start', 'end')
 
     def __init__(self, partition, order_by=None,
                  frame=None, start=None, end=0):
         super(Window, self).__init__()
-        self._partition = None
         self._order_by = None
-        self._frame = None
-        self._start = None
-        self._end = None
         self.partition = partition
         self.order_by = order_by
         self.frame = frame
@@ -1276,47 +1136,14 @@ class Window(object):
         self.end = end
 
     @property
-    def partition(self):
-        return self._partition
-
-    @partition.setter
-    def partition(self, value):
-        self._partition = value
-
-    @property
     def order_by(self):
         return self._order_by
 
     @order_by.setter
     def order_by(self, value):
-        if value is not None:
-            if isinstance(value, Expression):
-                value = [value]
+        if isinstance(value, Expression):
+            value = [value]
         self._order_by = value
-
-    @property
-    def frame(self):
-        return self._frame
-
-    @frame.setter
-    def frame(self, value):
-        self._frame = value
-
-    @property
-    def start(self):
-        return self._start
-
-    @start.setter
-    def start(self, value):
-        self._start = value
-
-    @property
-    def end(self):
-        return self._end
-
-    @end.setter
-    def end(self, value):
-        self._end = value
 
     @property
     def alias(self):
@@ -1362,22 +1189,13 @@ class Window(object):
 
 
 class Order(Expression):
-    __slots__ = ('_expression',)
+    __slots__ = ('expression',)
     _sql = ''
 
     def __init__(self, expression):
         super(Order, self).__init__()
-        self._expression = None
         self.expression = expression
         # TODO USING
-
-    @property
-    def expression(self):
-        return self._expression
-
-    @expression.setter
-    def expression(self, value):
-        self._expression = value
 
     def __str__(self):
         if isinstance(self.expression, SelectQuery):
