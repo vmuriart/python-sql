@@ -486,8 +486,8 @@ class Select(FromItem, SelectQuery):
         if self.offset is not None:
             rnum = _rownum.as_('rnum')
             limitselect.columns += (rnum,)
-            offsetselect = limitselect.select(*columns(limitselect),
-                                              where=rnum > self.offset)
+            offsetselect = limitselect.select(
+                *columns(limitselect), where=rnum > self.offset)
             query = offsetselect
         else:
             query = limitselect
