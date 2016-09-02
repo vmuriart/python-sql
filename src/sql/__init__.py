@@ -577,15 +577,17 @@ class Insert(WithQuery):
             return param
 
     def __str__(self):
-        columns = ''
+        returning = values = columns = ''
+
         if self.columns:
             columns = ' (' + ', '.join(map(text_type, self.columns)) + ')'
+
         if isinstance(self.values, Query):
             values = ' {0}'.format(text_type(self.values))
             # TODO manage DEFAULT
         elif self.values is None:
             values = ' DEFAULT VALUES'
-        returning = ''
+
         if self.returning:
             returning = ' RETURNING ' + ', '.join(
                 map(text_type, self.returning))
