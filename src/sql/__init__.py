@@ -1292,9 +1292,7 @@ class For(object):
 
     @tables.setter
     def tables(self, value):
-        if not isinstance(value, list):
-            value = [value]
-        self._tables = value
+        self._tables = value if isinstance(value, list) else [value]
 
     @property
     def type_(self):
@@ -1302,16 +1300,14 @@ class For(object):
 
     @type_.setter
     def type_(self, value):
-        value = value.upper()
-        self._type_ = value
+        self._type_ = value.upper()
 
     def __str__(self):
         tables = ''
         if self.tables:
             tables = ' OF ' + ', '.join(map(text_type, self.tables))
-        nowait = ''
-        if self.nowait:
-            nowait = ' NOWAIT'
+
+        nowait = ' NOWAIT' if self.nowait else ''
         return 'FOR {0}'.format(self.type_) + tables + nowait
 
 
