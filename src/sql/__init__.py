@@ -599,9 +599,7 @@ class Update(Insert):
 
     @values.setter
     def values(self, value):
-        if isinstance(value, Select):
-            value = [value]
-        self._values = value
+        self._values = [value] if isinstance(value, Select) else value
 
     def __str__(self):
         # Get columns without alias
@@ -686,9 +684,9 @@ class CombiningQuery(FromItem, SelectQuery):
     __slots__ = ('queries', 'all_')
     _operator = ''
 
-    def __init__(self, *queries, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(CombiningQuery, self).__init__(**kwargs)
-        self.queries = queries
+        self.queries = args
         self.all_ = kwargs.get('all_')
 
     def __str__(self):
@@ -746,19 +744,14 @@ class Table(FromItem):
     def params(self):
         return tuple()
 
-    def insert(self, columns=None, values=None, returning=None, with_=None):
-        return Insert(self, columns=columns, values=values,
-                      returning=returning, with_=with_)
+    def insert(self, *args, **kwargs):
+        return Insert(self, *args, **kwargs)
 
-    def update(self, columns, values, from_=None, where=None, returning=None,
-               with_=None):
-        return Update(self, columns=columns, values=values, from_=from_,
-                      where=where, returning=returning, with_=with_)
+    def update(self, *args, **kwargs):
+        return Update(self, *args, **kwargs)
 
-    def delete(self, only=False, using=None, where=None, returning=None,
-               with_=None):
-        return Delete(self, only=only, using=using, where=where,
-                      returning=returning, with_=with_)
+    def delete(self, *args, **kwargs):
+        return Delete(self, *args, **kwargs)
 
 
 class Join(FromItem):
@@ -779,8 +772,7 @@ class Join(FromItem):
 
     @type_.setter
     def type_(self, value):
-        value = value.upper()
-        self._type_ = value
+        self._type_ = value.upper()
 
     def __str__(self):
         join = '{} {} JOIN {}'.format(
