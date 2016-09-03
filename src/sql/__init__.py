@@ -211,7 +211,7 @@ class WithQuery(Query):
             return ''
         recursive = (' RECURSIVE' if any(w.recursive for w in self.with_)
                      else '')
-        with_ = 'WITH{0} '.format(recursive) + ', '.join(
+        with_ = 'WITH{} '.format(recursive) + ', '.join(
             w.statement() for w in self.with_) + ' '
         return with_
 
@@ -275,16 +275,16 @@ class With(FromItem):
         super(With, self).__init__()
 
     def statement(self):
-        columns = ' ({0})'.format(
-            ', '.join('"{0}"'.format(c) for c in self.columns)
+        columns = ' ({})'.format(
+            ', '.join('"{}"'.format(c) for c in self.columns)
         ) if self.columns else ''
-        return '"{0}"{1} AS ({2})'.format(self.alias, columns, self.query)
+        return '"{}"{} AS ({})'.format(self.alias, columns, self.query)
 
     def statement_params(self):
         return self.query.params
 
     def __str__(self):
-        return '"{0}"'.format(self.alias)
+        return '"{}"'.format(self.alias)
 
     @property
     def params(self):
@@ -341,22 +341,22 @@ class SelectQuery(WithQuery):
         if Flavor.get().limitstyle == 'limit':
             offset = ''
             if self.offset:
-                offset = ' OFFSET {0}'.format(self.offset)
+                offset = ' OFFSET {}'.format(self.offset)
             limit = ''
             if self.limit is not None:
-                limit = ' LIMIT {0}'.format(self.limit)
+                limit = ' LIMIT {}'.format(self.limit)
             elif self.offset:
                 max_limit = Flavor.get().max_limit
                 if max_limit:
-                    limit = ' LIMIT {0}'.format(max_limit)
+                    limit = ' LIMIT {}'.format(max_limit)
             return limit + offset
         else:
             offset = ''
             if self.offset:
-                offset = ' OFFSET ({0}) ROWS'.format(self.offset)
+                offset = ' OFFSET ({}) ROWS'.format(self.offset)
             fetch = ''
             if self.limit is not None:
-                fetch = ' FETCH FIRST ({0}) ROWS ONLY'.format(self.limit)
+                fetch = ' FETCH FIRST ({}) ROWS ONLY'.format(self.limit)
             return offset + fetch
 
 
@@ -409,9 +409,9 @@ class Select(FromItem, SelectQuery):
     def _format_column(column):
         if isinstance(column, As):
             if Flavor.get().no_as:
-                return '{0} {1}'.format(column.expression, column)
+                return '{} {}'.format(column.expression, column)
             else:
-                return '{0} AS {1}'.format(column.expression, column)
+                return '{} AS {}'.format(column.expression, column)
         else:
             return text_type(column)
 
@@ -494,12 +494,12 @@ class Select(FromItem, SelectQuery):
             windows = [f.window for f in self._window_functions()]
             if windows:
                 window = ' WINDOW ' + ', '.join(
-                    '"{0}" AS ({1})'.format(w.alias, w) for w in windows)
+                    '"{}" AS ({})'.format(w.alias, w) for w in windows)
             for_ = ''
             if self.for_ is not None:
                 for_ = ' ' + ' '.join(map(text_type, self.for_))
             return (self._with_str() +
-                    'SELECT {0} FROM {1}'.format(columns, from_) +
+                    'SELECT {} FROM {}'.format(columns, from_) +
                     where + group_by + having + window + self._order_by_str +
                     self._limit_offset_str + for_)
 
@@ -560,7 +560,7 @@ class Insert(WithQuery):
         if isinstance(value, Expression):
             return text_type(value)
         elif isinstance(value, Select):
-            return '({0})'.format(value)
+            return '({})'.format(value)
         else:
             return param
 
@@ -571,7 +571,7 @@ class Insert(WithQuery):
             columns = ' (' + csv_str(self.columns) + ')'
 
         if isinstance(self.values, Query):
-            values = ' {0}'.format(text_type(self.values))
+            values = ' {}'.format(text_type(self.values))
             # TODO manage DEFAULT
         elif self.values is None:
             values = ' DEFAULT VALUES'
@@ -580,7 +580,7 @@ class Insert(WithQuery):
             returning = ' RETURNING ' + ', '.join(
                 map(text_type, self.returning))
         with AliasManager():
-            return (self._with_str() + 'INSERT INTO {0}'.format(self.table) +
+            return (self._with_str() + 'INSERT INTO {}'.format(self.table) +
                     columns + values + returning)
 
     @property
@@ -623,11 +623,11 @@ class Update(Insert):
             from_ = ''
             if self.from_:
                 table = From([self.table])
-                from_ = ' FROM {0}'.format(text_type(self.from_))
+                from_ = ' FROM {}'.format(text_type(self.from_))
             else:
                 table = self.table
                 AliasManager.set(table, text_type(table)[1:-1])
-            values = ', '.join('{0} = {1}'.format(c, self._format(v))
+            values = ', '.join('{} = {}'.format(c, self._format(v))
                                for c, v in zip(columns, self.values))
             where = ''
             if self.where:
@@ -636,7 +636,7 @@ class Update(Insert):
             if self.returning:
                 returning = ' RETURNING ' + ', '.join(
                     map(text_type, self.returning))
-            return (self._with_str() + 'UPDATE {0} SET '.format(table) +
+            return (self._with_str() + 'UPDATE {} SET '.format(table) +
                     values + from_ + where + returning)
 
     @property
@@ -680,7 +680,7 @@ class Delete(WithQuery):
             if self.returning:
                 returning = ' RETURNING ' + ', '.join(
                     map(text_type, self.returning))
-            return self._with_str() + 'DELETE FROM{0} {1}'.format(
+            return self._with_str() + 'DELETE FROM{} {}'.format(
                 only, self.table) + where + returning
 
     @property
@@ -706,7 +706,7 @@ class CombiningQuery(FromItem, SelectQuery):
 
     def __str__(self):
         with AliasManager():
-            operator = ' {0} {1}'.format(
+            operator = ' {} {}'.format(
                 self._operator, 'ALL ' if self.all_ else '')
             return (operator.join(map(text_type, self.queries)) +
                     self._order_by_str + self._limit_offset_str)
@@ -748,12 +748,12 @@ class Table(FromItem):
 
     def __str__(self):
         if self._database:
-            return '"{0}"."{1}"."{2}"'.format(
+            return '"{}"."{}"."{}"'.format(
                 self._database, self._schema, self._name)
         elif self._schema:
-            return '"{0}"."{1}"'.format(self._schema, self._name)
+            return '"{}"."{}"'.format(self._schema, self._name)
         else:
-            return '"{0}"'.format(self._name)
+            return '"{}"'.format(self._name)
 
     @property
     def params(self):
@@ -796,10 +796,10 @@ class Join(FromItem):
         self._type_ = value
 
     def __str__(self):
-        join = '{0} {1} JOIN {2}'.format(
+        join = '{} {} JOIN {}'.format(
             From([self.left]), self.type_, From([self.right]))
         if self.condition:
-            condition = ' ON {0}'.format(self.condition)
+            condition = ' ON {}'.format(self.condition)
         else:
             condition = ''
         return join + condition
@@ -881,7 +881,7 @@ class Values(list, Query, FromItem):
                 return param
 
         return 'VALUES ' + ', '.join(
-            '({0})'.format(csv_map(format_, v)) for v in self)
+            '({})'.format(csv_map(format_, v)) for v in self)
 
     @property
     def params(self):
@@ -1100,7 +1100,7 @@ class As(Expression):
         self.output_name = output_name
 
     def __str__(self):
-        return '"{0}"'.format(self.output_name)
+        return '"{}"'.format(self.output_name)
 
     @property
     def params(self):
@@ -1120,7 +1120,7 @@ class Cast(Expression):
             value = self.expression
         else:
             value = Flavor.get().param
-        return 'CAST({0} AS {1})'.format(value, self.typename)
+        return 'CAST({} AS {})'.format(value, self.typename)
 
     @property
     def params(self):
@@ -1167,19 +1167,19 @@ class Window(object):
 
         def format_(frame_, direction):
             if frame_ is None:
-                return 'UNBOUNDED {0}'.format(direction)
+                return 'UNBOUNDED {}'.format(direction)
             elif not frame_:
                 return 'CURRENT ROW'
             elif frame_ < 0:
-                return '{0} PRECEDING'.format(-frame_)
+                return '{} PRECEDING'.format(-frame_)
             elif frame_ > 0:
-                return '{0} FOLLOWING'.format(frame_)
+                return '{} FOLLOWING'.format(frame_)
 
         frame = ''
         if self.frame:
             start = format_(self.start, 'PRECEDING')
             end = format_(self.end, 'FOLLOWING')
-            frame = ' {0} BETWEEN {1} AND {2}'.format(
+            frame = ' {} BETWEEN {} AND {}'.format(
                 self.frame, start, end)
         return partition + order_by + frame
 
@@ -1206,8 +1206,8 @@ class Order(Expression):
 
     def __str__(self):
         if isinstance(self.expression, SelectQuery):
-            return '({0}) {1}'.format(self.expression, self._sql)
-        return '{0} {1}'.format(self.expression, self._sql)
+            return '({}) {}'.format(self.expression, self._sql)
+        return '{} {}'.format(self.expression, self._sql)
 
     @property
     def params(self):
@@ -1234,8 +1234,8 @@ class NullOrder(Expression):
 
     def __str__(self):
         if not Flavor.get().null_ordering:
-            return '{0}, {1}'.format(self._case, self.expression)
-        return '{0} NULLS {1}'.format(self.expression, self._sql)
+            return '{}, {}'.format(self._case, self.expression)
+        return '{} NULLS {}'.format(self.expression, self._sql)
 
     @property
     def params(self):
@@ -1308,7 +1308,7 @@ class For(object):
             tables = ' OF ' + csv_str(self.tables)
 
         nowait = ' NOWAIT' if self.nowait else ''
-        return 'FOR {0}'.format(self.type_) + tables + nowait
+        return 'FOR {}'.format(self.type_) + tables + nowait
 
 
 Null = None

@@ -69,7 +69,7 @@ class Function(Expression, FromItem):
 
     @property
     def columns_definitions(self):
-        return ', '.join('"{0}" {1}'.format(c, d)
+        return ', '.join('"{}" {}'.format(c, d)
                          for c, d in self._columns_definitions)
 
     @columns_definitions.setter
@@ -332,7 +332,7 @@ class Trim(Function):
             else:
                 return text_type(arg)
 
-        return self._function + '({0} {1} FROM {2})'.format(
+        return self._function + '({} {} FROM {})'.format(
             self.position, format_(self.characters), format_(self.string))
 
     @property
@@ -479,7 +479,7 @@ class AtTimeZone(Function):
         if mapping:
             return text_type(mapping(self.field, self.zone))
         param = flavor.param
-        return '{0} AT TIME ZONE {1}'.format(text_type(self.field), param)
+        return '{} AT TIME ZONE {}'.format(text_type(self.field), param)
 
     @property
     def params(self):
@@ -501,8 +501,8 @@ class WindowFunction(Function):
         function = super(WindowFunction, self).__str__()
         filter_ = ''
         if self.filter_:
-            filter_ = ' FILTER (WHERE {0})'.format(self.filter_)
-        over = ' OVER "{0}"'.format(self.window.alias)
+            filter_ = ' FILTER (WHERE {})'.format(self.filter_)
+        over = ' OVER "{}"'.format(self.window.alias)
         return function + filter_ + over
 
     @property

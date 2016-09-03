@@ -81,7 +81,7 @@ class Operator(Expression):
         if isinstance(operand, Expression):
             return text_type(operand)
         elif isinstance(operand, (Select, CombiningQuery)):
-            return '({0})'.format(operand)
+            return '({})'.format(operand)
         elif isinstance(operand, (list, tuple)):
             return '(' + ', '.join(self._format(o, param)
                                    for o in operand) + ')'
@@ -118,7 +118,7 @@ class UnaryOperator(Operator):
         return self.operand,
 
     def __str__(self):
-        return '({0} {1})'.format(self._operator, self._format(self.operand))
+        return '({} {})'.format(self._operator, self._format(self.operand))
 
 
 class BinaryOperator(Operator):
@@ -135,7 +135,7 @@ class BinaryOperator(Operator):
 
     def __str__(self):
         left, right = self._operands
-        return '({0} {1} {2})'.format(
+        return '({} {} {})'.format(
             self._format(left), self._operator, self._format(right))
 
     def __invert__(self):
@@ -151,7 +151,7 @@ class NaryOperator(list, Operator):
         return self
 
     def __str__(self):
-        return '(' + (' {0} '.format(self._operator)).join(
+        return '(' + (' {} '.format(self._operator)).join(
             map(text_type, self)) + ')'
 
 
@@ -214,9 +214,9 @@ class Equal(BinaryOperator):
 
     def __str__(self):
         if self.left is Null:
-            return '({0} IS NULL)'.format(self.right)
+            return '({} IS NULL)'.format(self.right)
         elif self.right is Null:
-            return '({0} IS NULL)'.format(self.left)
+            return '({} IS NULL)'.format(self.left)
         return super(Equal, self).__str__()
 
 
@@ -226,9 +226,9 @@ class NotEqual(Equal):
 
     def __str__(self):
         if self.left is Null:
-            return '({0} IS NOT NULL)'.format(self.right)
+            return '({} IS NOT NULL)'.format(self.right)
         elif self.right is Null:
-            return '({0} IS NOT NULL)'.format(self.left)
+            return '({} IS NOT NULL)'.format(self.left)
         return super(Equal, self).__str__()
 
 
