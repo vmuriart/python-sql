@@ -29,8 +29,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import unicode_literals
-
 import string
 from threading import local, currentThread
 from collections import defaultdict
@@ -824,7 +822,7 @@ class From(list):
         def format_(from_):
             template = '%s'
             if isinstance(from_, Query):
-                template = '(%s)'
+                template = u'(%s)'
             alias_ = getattr(from_, 'alias', None)
             # TODO column_alias
             columns_definitions = getattr(from_, 'columns_definitions', None)
