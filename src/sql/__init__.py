@@ -39,7 +39,7 @@ from sql._compat import text_type, map, zip
 
 __version__ = '0.9.0-dev0'
 __all__ = ('Flavor', 'Table', 'Values', 'Literal', 'Column', 'Join',
-           'Asc', 'Desc', 'NullsFirst', 'NullsLast', 'format2numeric')
+           'Asc', 'Desc', 'NullsFirst', 'NullsLast')
 
 
 def alias(i, letters=string.ascii_lowercase):
@@ -164,19 +164,6 @@ class AliasManager(object):
     def alias_factory(cls):
         i = len(cls.local.alias)
         return alias(i)
-
-
-def format2numeric(query, params):
-    """Convert format paramstyle query to numeric paramstyle
-
-    >>> format2numeric('SELECT * FROM table WHERE col = %s', ('foo',))
-    ('SELECT * FROM table WHERE col = :0', ('foo',))
-    >>> format2numeric('SELECT * FROM table WHERE col1 = %s AND col2 = %s',
-    ...     ('foo', 'bar'))
-    ('SELECT * FROM table WHERE col1 = :0 AND col2 = :1', ('foo', 'bar'))
-    """
-    return (query % tuple(':{0:d}'.format(i)
-                          for i, _ in enumerate(params)), params)
 
 
 class Query(object):
