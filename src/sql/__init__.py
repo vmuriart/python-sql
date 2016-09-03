@@ -41,7 +41,7 @@ from sql.core import (
     SelectQuery, Select, Insert, Update, Delete, CombiningQuery, Union,
     Intersect, Except, Table, Join, From, Values, Expression, Literal, _Rownum,
     Column, As, Cast, Window, Order, Asc, Desc, NullOrder, NullsFirst,
-    NullsLast, For, Null, _rownum)  # noqa
+    NullsLast, For, Null, _rownum)
 
 from sql.functions import (
     Abs, Cbrt, Ceil, Degrees, Div, Exp, Floor, Ln,
@@ -65,16 +65,20 @@ from sql.functions import (
 
 from sql.operators import (
     And, Or, Not, Less, Greater, LessEqual, GreaterEqual,
-    Equal, NotEqual, Add, Sub, Mul, Div, Mod, Pow,
-    SquareRoot, CubeRoot, Factorial, Abs, BAnd, BOr, BXor,
+    Equal, NotEqual, Add, Sub, Mul, Pow,
+    SquareRoot, CubeRoot, Factorial, BAnd, BOr, BXor,
     BNot, LShift, RShift, Concat, Like, NotLike, ILike,
     NotILike, In, NotIn, Exists, Any, Some, All, )
 
 __version__ = '0.9.0-dev0'
 __all__ = (
     # Core
-    'Flavor', 'Table', 'Values', 'Literal', 'Column', 'Join',
-    'Asc', 'Desc', 'NullsFirst', 'NullsLast',
+    'Flavor', 'AliasManager', 'Query', 'WithQuery', 'FromItem', 'Lateral',
+    'With', 'SelectQuery', 'Select', 'Insert', 'Update', 'Delete',
+    'CombiningQuery', 'Union', 'Intersect', 'Except', 'Table', 'Join', 'From',
+    'Values', 'Expression', 'Literal', '_Rownum', 'Column', 'As', 'Cast',
+    'Window', 'Order', 'Asc', 'Desc', 'NullOrder', 'NullsFirst', 'NullsLast',
+    'For', 'Null', '_rownum',
 
     # Aggregate
     'Avg', 'BitAnd', 'BitOr', 'BoolAnd', 'BoolOr', 'Count', 'Every',
@@ -105,8 +109,8 @@ __all__ = (
 
     # Operators
     'And', 'Or', 'Not', 'Less', 'Greater', 'LessEqual', 'GreaterEqual',
-    'Equal', 'NotEqual', 'Add', 'Sub', 'Mul', 'Div', 'Mod', 'Pow',
-    'SquareRoot', 'CubeRoot', 'Factorial', 'Abs', 'BAnd', 'BOr', 'BXor',
-    'BNot', 'LShift', 'RShift', 'Concat', 'Like', 'NotLike', 'ILike',
-    'NotILike', 'In', 'NotIn', 'Exists', 'Any', 'Some', 'All',
+    'Equal', 'NotEqual', 'Add', 'Sub', 'Mul', 'Pow', 'SquareRoot', 'CubeRoot',
+    'Factorial', 'BAnd', 'BOr', 'BXor', 'BNot', 'LShift', 'RShift', 'Concat',
+    'Like', 'NotLike', 'ILike', 'NotILike', 'In', 'NotIn', 'Exists', 'Any',
+    'Some', 'All',
 )
