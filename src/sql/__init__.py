@@ -172,7 +172,7 @@ class Query(object):
 
     @property
     def params(self):
-        return ()
+        return tuple()
 
     def __iter__(self):
         yield text_type(self)
@@ -192,9 +192,9 @@ class WithQuery(Query):
     __slots__ = ('_with',)
 
     def __init__(self, **kwargs):
+        super(Query, self).__init__()
         self._with = None
         self.with_ = kwargs.get('with_')
-        super(Query, self).__init__()
 
     @property
     def with_(self):
@@ -202,9 +202,7 @@ class WithQuery(Query):
 
     @with_.setter
     def with_(self, value):
-        if isinstance(value, With):
-            value = [value]
-        self._with = value
+        self._with = [value] if isinstance(value, With) else value
 
     def _with_str(self):
         if not self.with_:
@@ -217,7 +215,7 @@ class WithQuery(Query):
 
     def _with_params(self):
         if not self.with_:
-            return ()
+            return tuple()
         params = []
         for w in self.with_:
             params.extend(w.statement_params())
@@ -256,9 +254,7 @@ class Lateral(FromItem):
         self._from_item = from_item
 
     def __str__(self):
-        template = '%s'
-        if isinstance(self._from_item, Query):
-            template = '(%s)'
+        template = '(%s)' if isinstance(self._from_item, Query) else '%s'
         return 'LATERAL ' + template % self._from_item
 
     def __getattr__(self, name):
@@ -269,10 +265,10 @@ class With(FromItem):
     __slots__ = ('columns', 'query', 'recursive')
 
     def __init__(self, *args, **kwargs):
+        super(With, self).__init__()
         self.columns = args
         self.recursive = kwargs.get('recursive')
         self.query = kwargs.get('query')
-        super(With, self).__init__()
 
     def statement(self):
         columns = ' ({})'.format(
@@ -295,13 +291,16 @@ class SelectQuery(WithQuery):
     __slots__ = ('_order_by', '_limit', '_offset')
 
     def __init__(self, **kwargs):
-        self._order_by = None
-        self._limit = None
-        self._offset = None
-        self.order_by = kwargs.get('order_by')
-        self.limit = kwargs.get('limit')
-        self.offset = kwargs.get('offset')
         super(SelectQuery, self).__init__(**kwargs)
+
+        self._order_by = None
+        self.order_by = kwargs.get('order_by')
+
+        self._limit = None
+        self.limit = kwargs.get('limit')
+
+        self._offset = None
+        self.offset = kwargs.get('offset')
 
     @property
     def order_by(self):
@@ -309,16 +308,12 @@ class SelectQuery(WithQuery):
 
     @order_by.setter
     def order_by(self, value):
-        if isinstance(value, Expression):
-            value = [value]
-        self._order_by = value
+        self._order_by = [value] if isinstance(value, Expression) else value
 
     @property
     def _order_by_str(self):
-        order_by = ''
-        if self.order_by:
-            order_by = ' ORDER BY ' + csv_str(self.order_by)
-        return order_by
+        ob = (' ORDER BY ' + csv_str(self.order_by)) if self.order_by else ''
+        return ob
 
     @property
     def limit(self):
@@ -365,17 +360,21 @@ class Select(FromItem, SelectQuery):
 
     def __init__(self, columns, from_=None, where=None, group_by=None,
                  having=None, for_=None, **kwargs):
-        self._columns = None
-        self._group_by = None
-        self._for_ = None
-        super(Select, self).__init__(**kwargs)
         # TODO ALL|DISTINCT
+        super(Select, self).__init__(**kwargs)
+
+        self._columns = None
         self.columns = columns
+
+        self._group_by = None
+        self.group_by = group_by
+
+        self._for_ = None
+        self.for_ = for_
+
         self.from_ = from_
         self.where = where
-        self.group_by = group_by
         self.having = having
-        self.for_ = for_
 
     @property
     def columns(self):
@@ -391,9 +390,7 @@ class Select(FromItem, SelectQuery):
 
     @group_by.setter
     def group_by(self, value):
-        if isinstance(value, Expression):
-            value = [value]
-        self._group_by = value
+        self._group_by = [value] if isinstance(value, Expression) else value
 
     @property
     def for_(self):
@@ -401,9 +398,7 @@ class Select(FromItem, SelectQuery):
 
     @for_.setter
     def for_(self, value):
-        if isinstance(value, For):
-            value = [value]
-        self._for_ = value
+        self._for_ = [value] if isinstance(value, For) else value
 
     @staticmethod
     def _format_column(column):
@@ -421,11 +416,10 @@ class Select(FromItem, SelectQuery):
         windows = set()
         for column in self.columns:
             window_function = None
-            if isinstance(column, (WindowFunction, Aggregate)):
+            tps = WindowFunction, Aggregate
+            if isinstance(column, tps):
                 window_function = column
-            elif isinstance(column, As) and isinstance(column.expression,
-                                                       (WindowFunction,
-                                                        Aggregate)):
+            elif isinstance(column, As) and isinstance(column.expression, tps):
                 window_function = column.expression
             if window_function and window_function.window and (
                     window_function.window not in windows):
@@ -485,8 +479,7 @@ class Select(FromItem, SelectQuery):
                 where = ' WHERE ' + text_type(self.where)
             group_by = ''
             if self.group_by:
-                group_by = ' GROUP BY ' + ', '.join(
-                    map(text_type, self.group_by))
+                group_by = ' GROUP BY ' + csv_str(self.group_by)
             having = ''
             if self.having:
                 having = ' HAVING ' + text_type(self.having)
@@ -535,13 +528,13 @@ class Insert(WithQuery):
 
     def __init__(self, table, columns=None, values=None, returning=None,
                  **kwargs):
+        super(Insert, self).__init__(**kwargs)
         self._values = None
         self.values = values
 
         self.table = table
         self.columns = columns
         self.returning = returning
-        super(Insert, self).__init__(**kwargs)
 
     @property
     def values(self):
@@ -549,9 +542,7 @@ class Insert(WithQuery):
 
     @values.setter
     def values(self, value):
-        if isinstance(value, list):
-            value = Values(value)
-        self._values = value
+        self._values = Values(value) if isinstance(value, list) else value
 
     @staticmethod
     def _format(value, param=None):
@@ -570,15 +561,14 @@ class Insert(WithQuery):
         if self.columns:
             columns = ' (' + csv_str(self.columns) + ')'
 
+        # TODO manage DEFAULT
         if isinstance(self.values, Query):
             values = ' {}'.format(text_type(self.values))
-            # TODO manage DEFAULT
         elif self.values is None:
             values = ' DEFAULT VALUES'
 
         if self.returning:
-            returning = ' RETURNING ' + ', '.join(
-                map(text_type, self.returning))
+            returning = ' RETURNING ' + csv_str(self.returning)
         with AliasManager():
             return (self._with_str() + 'INSERT INTO {}'.format(self.table) +
                     columns + values + returning)
@@ -634,8 +624,7 @@ class Update(Insert):
                 where = ' WHERE ' + text_type(self.where)
             returning = ''
             if self.returning:
-                returning = ' RETURNING ' + ', '.join(
-                    map(text_type, self.returning))
+                returning = ' RETURNING ' + csv_str(self.returning)
             return (self._with_str() + 'UPDATE {} SET '.format(table) +
                     values + from_ + where + returning)
 
@@ -664,11 +653,11 @@ class Delete(WithQuery):
     def __init__(self, table, only=False, where=None, returning=None,
                  **kwargs):
         # TODO using (not standard)
+        super(Delete, self).__init__(**kwargs)
         self.table = table
         self.only = only
         self.where = where
         self.returning = returning
-        super(Delete, self).__init__(**kwargs)
 
     def __str__(self):
         with AliasManager(exclude=[self.table]):
@@ -700,9 +689,9 @@ class CombiningQuery(FromItem, SelectQuery):
     _operator = ''
 
     def __init__(self, *queries, **kwargs):
+        super(CombiningQuery, self).__init__(**kwargs)
         self.queries = queries
         self.all_ = kwargs.get('all_')
-        super(CombiningQuery, self).__init__(**kwargs)
 
     def __str__(self):
         with AliasManager():
@@ -757,7 +746,7 @@ class Table(FromItem):
 
     @property
     def params(self):
-        return ()
+        return tuple()
 
     def insert(self, columns=None, values=None, returning=None, with_=None):
         return Insert(self, columns=columns, values=values,
@@ -1049,7 +1038,7 @@ class Literal(Expression):
     def params(self):
         if Flavor.get().no_boolean:
             if self.value is True or self.value is False:
-                return ()
+                return tuple()
         return self.value,
 
 
@@ -1059,7 +1048,7 @@ class _Rownum(Expression):
 
     @property
     def params(self):
-        return ()
+        return tuple()
 
 
 class Column(Expression):
@@ -1075,10 +1064,7 @@ class Column(Expression):
         return self._from
 
     def __str__(self):
-        if self.name == '*':
-            t = '%s'
-        else:
-            t = '"%s"'
+        t = '%s' if self.name == '*' else '"%s"'
         alias_ = self._from.alias
         if alias_:
             t = '"%s".' + t
@@ -1088,7 +1074,7 @@ class Column(Expression):
 
     @property
     def params(self):
-        return ()
+        return tuple()
 
 
 class As(Expression):
@@ -1104,7 +1090,7 @@ class As(Expression):
 
     @property
     def params(self):
-        return ()
+        return tuple()
 
 
 class Cast(Expression):
@@ -1179,8 +1165,7 @@ class Window(object):
         if self.frame:
             start = format_(self.start, 'PRECEDING')
             end = format_(self.end, 'FOLLOWING')
-            frame = ' {} BETWEEN {} AND {}'.format(
-                self.frame, start, end)
+            frame = ' {} BETWEEN {} AND {}'.format(self.frame, start, end)
         return partition + order_by + frame
 
     @property
@@ -1248,7 +1233,7 @@ class NullOrder(Expression):
 
     @property
     def _case(self):
-        from .conditionals import Case
+        from sql.conditionals import Case
         values = self._case_values()
         if isinstance(self.expression, Order):
             expression = self.expression.expression
@@ -1303,10 +1288,7 @@ class For(object):
         self._type_ = value.upper()
 
     def __str__(self):
-        tables = ''
-        if self.tables:
-            tables = ' OF ' + csv_str(self.tables)
-
+        tables = (' OF ' + csv_str(self.tables)) if self.tables else ''
         nowait = ' NOWAIT' if self.nowait else ''
         return 'FOR {}'.format(self.type_) + tables + nowait
 

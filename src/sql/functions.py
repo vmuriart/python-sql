@@ -33,6 +33,7 @@ from itertools import chain
 
 from sql import Expression, Flavor, FromItem
 from sql._compat import string_types, text_type, map, zip
+from sql.utils import csv_map
 
 __all__ = ('Abs', 'Cbrt', 'Ceil', 'Degrees', 'Div', 'Exp', 'Floor', 'Ln',
            'Log', 'Mod', 'Pi', 'Power', 'Radians', 'Random', 'Round',
@@ -65,7 +66,7 @@ class Function(Expression, FromItem):
         self.args = args
 
         self._columns_definitions = None
-        self.columns_definitions = kwargs.get('columns_definitions', [])
+        self.columns_definitions = kwargs.get('columns_definitions')
 
     @property
     def columns_definitions(self):
@@ -74,7 +75,7 @@ class Function(Expression, FromItem):
 
     @columns_definitions.setter
     def columns_definitions(self, value):
-        self._columns_definitions = value
+        self._columns_definitions = value if value is not None else list()
 
     @staticmethod
     def _format(value):
@@ -87,8 +88,7 @@ class Function(Expression, FromItem):
         mapping = Flavor.get().function_mapping.get(type(self))
         if mapping:
             return text_type(mapping(*self.args))
-        return self._function + '(' + ', '.join(
-            map(self._format, self.args)) + ')'
+        return self._function + '(' + csv_map(self._format, self.args) + ')'
 
     @property
     def params(self):
@@ -493,9 +493,9 @@ class WindowFunction(Function):
     __slots__ = ('filter_', 'window')
 
     def __init__(self, *args, **kwargs):
+        super(WindowFunction, self).__init__(*args, **kwargs)
         self.filter_ = kwargs.get('filter_')
         self.window = kwargs.get('window')
-        super(WindowFunction, self).__init__(*args, **kwargs)
 
     def __str__(self):
         function = super(WindowFunction, self).__str__()

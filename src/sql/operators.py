@@ -31,7 +31,7 @@
 
 from array import array
 
-from sql import Expression, Flavor, Select, CombiningQuery, Null
+from sql import Expression, Flavor, Select, CombiningQuery
 from sql.functions import Upper
 from sql._compat import text_type, map
 
@@ -206,16 +206,16 @@ class Equal(BinaryOperator):
 
     @property
     def _operands(self):
-        if self.left is Null:
+        if self.left is None:
             return self.right,
-        elif self.right is Null:
+        elif self.right is None:
             return self.left,
         return super(Equal, self)._operands
 
     def __str__(self):
-        if self.left is Null:
+        if self.left is None:
             return '({} IS NULL)'.format(self.right)
-        elif self.right is Null:
+        elif self.right is None:
             return '({} IS NULL)'.format(self.left)
         return super(Equal, self).__str__()
 
@@ -225,9 +225,9 @@ class NotEqual(Equal):
     _operator = '!='
 
     def __str__(self):
-        if self.left is Null:
+        if self.left is None:
             return '({} IS NOT NULL)'.format(self.right)
-        elif self.right is Null:
+        elif self.right is None:
             return '({} IS NOT NULL)'.format(self.left)
         return super(Equal, self).__str__()
 
@@ -258,10 +258,7 @@ class Mod(BinaryOperator):
     @property
     def _operator(self):
         # '%' must be escaped with format paramstyle
-        if Flavor.get().paramstyle == 'format':
-            return '%%'
-        else:
-            return '%'
+        return '%%' if Flavor.get().paramstyle == 'format' else '%'
 
 
 class Pow(BinaryOperator):
@@ -339,10 +336,7 @@ class ILike(BinaryOperator):
 
     @property
     def _operator(self):
-        if Flavor.get().ilike:
-            return 'ILIKE'
-        else:
-            return 'LIKE'
+        return 'ILIKE' if Flavor.get().ilike else 'LIKE'
 
     @property
     def _operands(self):
@@ -357,10 +351,7 @@ class NotILike(ILike):
 
     @property
     def _operator(self):
-        if Flavor.get().ilike:
-            return 'NOT ILIKE'
-        else:
-            return 'NOT LIKE'
+        return 'NOT ILIKE' if Flavor.get().ilike else 'NOT LIKE'
 
 
 # TODO SIMILAR

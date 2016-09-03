@@ -59,18 +59,14 @@ class Aggregate(Expression):
 
     @within.setter
     def within(self, value):
-        if isinstance(value, Expression):
-            value = [value]
-        self._within = value
+        self._within = [value] if isinstance(value, Expression) else value
 
     def __str__(self):
         quantifier = 'DISTINCT ' if self.distinct else ''
-        aggregate = '{}({}{})'.format(
-            self._sql, quantifier, self.expression)
+        aggregate = '{}({}{})'.format(self._sql, quantifier, self.expression)
         within = ''
         if self.within:
-            within = ' WITHIN GROUP (ORDER BY {})'.format(
-                csv_str(self.within))
+            within = ' WITHIN GROUP (ORDER BY {})'.format(csv_str(self.within))
         filter_ = ''
         if self.filter_:
             filter_ = ' FILTER (WHERE {})'.format(self.filter_)
