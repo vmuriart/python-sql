@@ -30,7 +30,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from sql import Expression
-from sql._compat import text_type, map
+from sql.utils import csv_str
 
 __all__ = ('Avg', 'BitAnd', 'BitOr', 'BoolAnd', 'BoolOr', 'Count', 'Every',
            'Max', 'Min', 'Stddev', 'Sum', 'Variance')
@@ -70,7 +70,7 @@ class Aggregate(Expression):
         within = ''
         if self.within:
             within = ' WITHIN GROUP (ORDER BY {0})'.format(
-                ', '.join(map(text_type, self.within)))
+                csv_str(self.within))
         filter_ = ''
         if self.filter_:
             filter_ = ' FILTER (WHERE {0})'.format(self.filter_)

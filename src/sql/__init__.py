@@ -36,6 +36,7 @@ from threading import local, currentThread
 from collections import defaultdict
 
 from sql._compat import text_type, map, zip
+from sql.utils import csv_str, csv_map
 
 __version__ = '0.9.0-dev0'
 __all__ = ('Flavor', 'Table', 'Values', 'Literal', 'Column', 'Join',
@@ -316,7 +317,7 @@ class SelectQuery(WithQuery):
     def _order_by_str(self):
         order_by = ''
         if self.order_by:
-            order_by = ' ORDER BY ' + ', '.join(map(text_type, self.order_by))
+            order_by = ' ORDER BY ' + csv_str(self.order_by)
         return order_by
 
     @property
@@ -476,7 +477,7 @@ class Select(FromItem, SelectQuery):
         with AliasManager():
             from_ = text_type(self.from_)
             if self.columns:
-                columns = ', '.join(map(self._format_column, self.columns))
+                columns = csv_map(self._format_column, self.columns)
             else:
                 columns = '*'
             where = ''
@@ -567,7 +568,7 @@ class Insert(WithQuery):
         returning = values = columns = ''
 
         if self.columns:
-            columns = ' (' + ', '.join(map(text_type, self.columns)) + ')'
+            columns = ' (' + csv_str(self.columns) + ')'
 
         if isinstance(self.values, Query):
             values = ' {0}'.format(text_type(self.values))
@@ -852,7 +853,7 @@ class From(list):
             else:
                 return template % from_
 
-        return ', '.join(map(format_, self))
+        return csv_map(format_, self)
 
     @property
     def params(self):
@@ -880,7 +881,7 @@ class Values(list, Query, FromItem):
                 return param
 
         return 'VALUES ' + ', '.join(
-            '({0})'.format(', '.join(map(format_, v))) for v in self)
+            '({0})'.format(csv_map(format_, v)) for v in self)
 
     @property
     def params(self):
@@ -1159,11 +1160,10 @@ class Window(object):
     def __str__(self):
         partition = ''
         if self.partition:
-            partition = 'PARTITION BY ' + ', '.join(
-                map(text_type, self.partition))
+            partition = 'PARTITION BY ' + csv_str(self.partition)
         order_by = ''
         if self.order_by:
-            order_by = ' ORDER BY ' + ', '.join(map(text_type, self.order_by))
+            order_by = ' ORDER BY ' + csv_str(self.order_by)
 
         def format_(frame_, direction):
             if frame_ is None:
@@ -1305,7 +1305,7 @@ class For(object):
     def __str__(self):
         tables = ''
         if self.tables:
-            tables = ' OF ' + ', '.join(map(text_type, self.tables))
+            tables = ' OF ' + csv_str(self.tables)
 
         nowait = ' NOWAIT' if self.nowait else ''
         return 'FOR {0}'.format(self.type_) + tables + nowait

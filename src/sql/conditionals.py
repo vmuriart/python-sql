@@ -30,7 +30,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from sql import Expression, Flavor
-from sql._compat import text_type, map
+from sql.utils import csv_map
+from sql._compat import text_type
 
 __all__ = ('Case', 'Coalesce', 'NullIf', 'Greatest', 'Least')
 
@@ -95,7 +96,7 @@ class Coalesce(Conditional):
 
     def __str__(self):
         return (self._conditional + '(' +
-                ', '.join(map(self._format, self.values)) + ')')
+                csv_map(self._format, self.values) + ')')
 
     @property
     def params(self):

@@ -29,6 +29,9 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from sql._compat import text_type, map
+
+
 def format2numeric(query, params):
     """Convert format paramstyle query to numeric paramstyle
 
@@ -40,3 +43,11 @@ def format2numeric(query, params):
     """
     return (query % tuple(
         ':{0:d}'.format(i) for i, _ in enumerate(params)), params)
+
+
+def csv_map(func, text):
+    return ', '.join(map(func, text))
+
+
+def csv_str(text):
+    return csv_map(text_type, text)
