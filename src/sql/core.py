@@ -29,9 +29,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from _threading_local import local
 from collections import defaultdict
-from threading import currentThread
+from threading import currentThread, local
 
 from sql._compat import text_type, map, zip
 from sql.utils import csv_str, csv_map, alias
