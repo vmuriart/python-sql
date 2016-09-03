@@ -29,7 +29,30 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import string
+
 from sql._compat import text_type, map
+
+
+def alias(i, letters=string.ascii_lowercase):
+    """Generate a unique alias based on integer
+
+    >>> [alias(n) for n in range(6)]
+    ['a', 'b', 'c', 'd', 'e', 'f']
+    >>> [alias(n) for n in range(26, 30)]
+    ['ba', 'bb', 'bc', 'bd']
+    >>> [alias(26**n) for n in range(5)]
+    ['b', 'ba', 'baa', 'baaa', 'baaaa']
+    """
+    s = ''
+    length = len(letters)
+    while True:
+        r = i % length
+        s = letters[r] + s
+        i //= length
+        if i == 0:
+            break
+    return s
 
 
 def format2numeric(query, params):

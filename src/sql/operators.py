@@ -31,7 +31,7 @@
 
 from array import array
 
-from sql import Expression, Flavor, Select, CombiningQuery
+from sql.core import Flavor, Select, CombiningQuery, Expression
 from sql.functions import Upper
 from sql._compat import text_type, map
 

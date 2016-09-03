@@ -29,7 +29,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from sql import Expression, Flavor
+from sql.core import Flavor, Expression
 from sql.utils import csv_map
 from sql._compat import text_type
 

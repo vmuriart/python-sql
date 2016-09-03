@@ -31,7 +31,7 @@
 
 from itertools import chain
 
-from sql import Expression, Flavor, FromItem
+from sql.core import Flavor, FromItem, Expression
 from sql._compat import string_types, text_type, map, zip
 from sql.utils import csv_map
 
