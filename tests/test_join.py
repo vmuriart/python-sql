@@ -29,41 +29,40 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-
 from sql import Join, Table, AliasManager
 from sql.functions import Now
 
 
-class TestJoin(unittest.TestCase):
-    def test_join(self):
-        t1 = Table('t1')
-        t2 = Table('t2')
-        join = Join(t1, t2)
-        with AliasManager():
-            assert str(join) == '"t1" AS "a" INNER JOIN "t2" AS "b"'
-            assert join.params == ()
+def test_join():
+    t1 = Table('t1')
+    t2 = Table('t2')
+    join = Join(t1, t2)
+    with AliasManager():
+        assert str(join) == '"t1" AS "a" INNER JOIN "t2" AS "b"'
+        assert join.params == ()
 
-        join.condition = t1.c == t2.c
-        with AliasManager():
-            assert str(join) == ('"t1" AS "a" INNER JOIN '
-                                 '"t2" AS "b" ON ("a"."c" = "b"."c")')
+    join.condition = t1.c == t2.c
+    with AliasManager():
+        assert str(join) == ('"t1" AS "a" INNER JOIN '
+                             '"t2" AS "b" ON ("a"."c" = "b"."c")')
 
-    def test_join_subselect(self):
-        t1 = Table('t1')
-        t2 = Table('t2')
-        select = t2.select()
-        join = Join(t1, select)
-        join.condition = t1.c == select.c
-        with AliasManager():
-            assert str(join) == ('"t1" AS "a" INNER JOIN '
-                                 '(SELECT * FROM "t2" AS "c") '
-                                 'AS "b" ON ("a"."c" = "b"."c")')
-            assert join.params == ()
 
-    def test_join_function(self):
-        t1 = Table('t1')
-        join = Join(t1, Now())
-        with AliasManager():
-            assert str(join) == '"t1" AS "a" INNER JOIN NOW() AS "b"'
-            assert join.params == ()
+def test_join_subselect():
+    t1 = Table('t1')
+    t2 = Table('t2')
+    select = t2.select()
+    join = Join(t1, select)
+    join.condition = t1.c == select.c
+    with AliasManager():
+        assert str(join) == ('"t1" AS "a" INNER JOIN '
+                             '(SELECT * FROM "t2" AS "c") '
+                             'AS "b" ON ("a"."c" = "b"."c")')
+        assert join.params == ()
+
+
+def test_join_function():
+    t1 = Table('t1')
+    join = Join(t1, Now())
+    with AliasManager():
+        assert str(join) == '"t1" AS "a" INNER JOIN NOW() AS "b"'
+        assert join.params == ()

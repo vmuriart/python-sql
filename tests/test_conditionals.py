@@ -29,50 +29,50 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-
-from sql import Table
-from sql.conditionals import Case, Coalesce, NullIf, Greatest, Least
+from sql import Case, Coalesce, NullIf, Greatest, Least
 
 
-class TestConditionals(unittest.TestCase):
-    table = Table('t')
+def test_case(table):
+    case = Case((table.c1, 'foo'),
+                (table.c2, 'bar'),
+                else_=table.c3)
+    assert str(case) == ('CASE '
+                         'WHEN "c1" THEN %s '
+                         'WHEN "c2" THEN %s '
+                         'ELSE "c3" END')
+    assert case.params == ('foo', 'bar')
 
-    def test_case(self):
-        case = Case((self.table.c1, 'foo'),
-                    (self.table.c2, 'bar'),
-                    else_=self.table.c3)
-        assert str(case) == ('CASE '
-                             'WHEN "c1" THEN %s '
-                             'WHEN "c2" THEN %s '
-                             'ELSE "c3" END')
-        assert case.params == ('foo', 'bar')
 
-    def test_case_no_expression(self):
-        case = Case((True, self.table.c1), (self.table.c2, False),
-                    else_=False)
-        assert str(case) == ('CASE '
-                             'WHEN %s THEN "c1" '
-                             'WHEN "c2" THEN %s '
-                             'ELSE %s END')
-        assert case.params == (True, False, False)
+def test_case_no_expression(table):
+    case = Case((True, table.c1),
+                (table.c2, False),
+                else_=False)
+    assert str(case) == ('CASE '
+                         'WHEN %s THEN "c1" '
+                         'WHEN "c2" THEN %s '
+                         'ELSE %s END')
+    assert case.params == (True, False, False)
 
-    def test_coalesce(self):
-        coalesce = Coalesce(self.table.c1, self.table.c2, 'foo')
-        assert str(coalesce) == 'COALESCE("c1", "c2", %s)'
-        assert coalesce.params == ('foo',)
 
-    def test_nullif(self):
-        nullif = NullIf(self.table.c1, 'foo')
-        assert str(nullif) == 'NULLIF("c1", %s)'
-        assert nullif.params == ('foo',)
+def test_coalesce(table):
+    coalesce = Coalesce(table.c1, table.c2, 'foo')
+    assert str(coalesce) == 'COALESCE("c1", "c2", %s)'
+    assert coalesce.params == ('foo',)
 
-    def test_greatest(self):
-        greatest = Greatest(self.table.c1, self.table.c2, 'foo')
-        assert str(greatest) == 'GREATEST("c1", "c2", %s)'
-        assert greatest.params == ('foo',)
 
-    def test_least(self):
-        least = Least(self.table.c1, self.table.c2, 'foo')
-        assert str(least) == 'LEAST("c1", "c2", %s)'
-        assert least.params == ('foo',)
+def test_nullif(table):
+    nullif = NullIf(table.c1, 'foo')
+    assert str(nullif) == 'NULLIF("c1", %s)'
+    assert nullif.params == ('foo',)
+
+
+def test_greatest(table):
+    greatest = Greatest(table.c1, table.c2, 'foo')
+    assert str(greatest) == 'GREATEST("c1", "c2", %s)'
+    assert greatest.params == ('foo',)
+
+
+def test_least(table):
+    least = Least(table.c1, table.c2, 'foo')
+    assert str(least) == 'LEAST("c1", "c2", %s)'
+    assert least.params == ('foo',)

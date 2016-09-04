@@ -29,28 +29,24 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-
-from sql import As, Column, Table, Flavor
+from sql import As, Flavor
 
 
-class TestAs(unittest.TestCase):
-    table = Table('t')
-    column = Column(table, 'c')
+def test_as(column):
+    assert str(As(column, 'foo')) == '"foo"'
 
-    def test_as(self):
-        assert str(As(self.column, 'foo')) == '"foo"'
 
-    def test_as_select(self):
-        query = self.table.select(self.column.as_('foo'))
-        assert str(query) == 'SELECT "a"."c" AS "foo" FROM "t" AS "a"'
+def test_as_select(table, column):
+    query = table.select(column.as_('foo'))
+    assert str(query) == 'SELECT "a"."c" AS "foo" FROM "t" AS "a"'
+    assert query.params == ()
+
+
+def test_no_as(table, column):
+    query = table.select(column.as_('foo'))
+    try:
+        Flavor.set(Flavor(no_as=True))
+        assert str(query) == 'SELECT "a"."c" "foo" FROM "t" "a"'
         assert query.params == ()
-
-    def test_no_as(self):
-        query = self.table.select(self.column.as_('foo'))
-        try:
-            Flavor.set(Flavor(no_as=True))
-            assert str(query) == 'SELECT "a"."c" "foo" FROM "t" "a"'
-            assert query.params == ()
-        finally:
-            Flavor.set(Flavor())
+    finally:
+        Flavor.set(Flavor())

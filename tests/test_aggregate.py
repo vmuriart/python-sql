@@ -29,39 +29,38 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-
-from sql import Table, Window, AliasManager
+from sql import Window, AliasManager
 from sql.aggregate import Avg
 
 
-class TestAggregate(unittest.TestCase):
-    table = Table('t')
+def test_avg(table):
+    avg = Avg(table.c)
+    assert str(avg) == 'AVG("c")'
 
-    def test_avg(self):
-        avg = Avg(self.table.c)
-        assert str(avg) == 'AVG("c")'
+    avg = Avg(table.a + table.b)
+    assert str(avg) == 'AVG(("a" + "b"))'
 
-        avg = Avg(self.table.a + self.table.b)
-        assert str(avg) == 'AVG(("a" + "b"))'
 
-    def test_within(self):
-        avg = Avg(self.table.a, within=self.table.b)
-        assert str(avg) == 'AVG("a") WITHIN GROUP (ORDER BY "b")'
-        assert avg.params == ()
+def test_within(table):
+    avg = Avg(table.a, within=table.b)
+    assert str(avg) == 'AVG("a") WITHIN GROUP (ORDER BY "b")'
+    assert avg.params == ()
 
-    def test_filter(self):
-        avg = Avg(self.table.a, filter_=self.table.a > 0)
-        assert str(avg) == 'AVG("a") FILTER (WHERE ("a" > %s))'
-        assert avg.params == (0,)
 
-    def test_window(self):
-        avg = Avg(self.table.c, window=Window([]))
-        with AliasManager():
-            assert str(avg) == 'AVG("a"."c") OVER "b"'
-        assert avg.params == ()
+def test_filter(table):
+    avg = Avg(table.a, filter_=table.a > 0)
+    assert str(avg) == 'AVG("a") FILTER (WHERE ("a" > %s))'
+    assert avg.params == (0,)
 
-    def test_distinct(self):
-        avg = Avg(self.table.c, distinct=True)
-        assert str(avg) == 'AVG(DISTINCT "c")'
-        assert avg.params == ()
+
+def test_window(table):
+    avg = Avg(table.c, window=Window([]))
+    with AliasManager():
+        assert str(avg) == 'AVG("a"."c") OVER "b"'
+    assert avg.params == ()
+
+
+def test_distinct(table):
+    avg = Avg(table.c, distinct=True)
+    assert str(avg) == 'AVG(DISTINCT "c")'
+    assert avg.params == ()

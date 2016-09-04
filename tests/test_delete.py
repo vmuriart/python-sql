@@ -29,45 +29,44 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-
 from sql import Table, With
 
 
-class TestDelete(unittest.TestCase):
-    table = Table('t')
+def test_delete1(table):
+    query = table.delete()
+    assert str(query) == 'DELETE FROM "t"'
+    assert query.params == ()
 
-    def test_delete1(self):
-        query = self.table.delete()
-        assert str(query) == 'DELETE FROM "t"'
-        assert query.params == ()
 
-    def test_delete2(self):
-        query = self.table.delete(where=(self.table.c == 'foo'))
-        assert str(query) == 'DELETE FROM "t" WHERE ("c" = %s)'
-        assert query.params == ('foo',)
+def test_delete2(table):
+    query = table.delete(where=(table.c == 'foo'))
+    assert str(query) == 'DELETE FROM "t" WHERE ("c" = %s)'
+    assert query.params == ('foo',)
 
-    def test_delete3(self):
-        t1 = Table('t1')
-        t2 = Table('t2')
-        query = t1.delete(where=(t1.c.in_(t2.select(t2.c))))
-        assert str(query) == ('DELETE FROM "t1" WHERE '
-                              '("c" IN (SELECT "a"."c" FROM "t2" AS "a"))')
-        assert query.params == ()
 
-    def test_delete_returning(self):
-        query = self.table.delete(returning=[self.table.c])
-        assert str(query) == 'DELETE FROM "t" RETURNING "c"'
-        assert query.params == ()
+def test_delete3():
+    t1 = Table('t1')
+    t2 = Table('t2')
+    query = t1.delete(where=(t1.c.in_(t2.select(t2.c))))
+    assert str(query) == ('DELETE FROM "t1" WHERE '
+                          '("c" IN (SELECT "a"."c" FROM "t2" AS "a"))')
+    assert query.params == ()
 
-    def test_with(self):
-        t1 = Table('t1')
-        w = With(query=t1.select(t1.c1))
 
-        query = self.table.delete(with_=[w],
-                                  where=self.table.c2.in_(w.select(w.c3)))
-        assert str(query) == ('WITH "a" AS '
-                              '(SELECT "b"."c1" FROM "t1" AS "b") '
-                              'DELETE FROM "t" WHERE '
-                              '("c2" IN (SELECT "a"."c3" FROM "a" AS "a"))')
-        assert query.params == ()
+def test_delete_returning(table):
+    query = table.delete(returning=[table.c])
+    assert str(query) == 'DELETE FROM "t" RETURNING "c"'
+    assert query.params == ()
+
+
+def test_with(table):
+    t1 = Table('t1')
+    w = With(query=t1.select(t1.c1))
+
+    query = table.delete(with_=[w],
+                         where=table.c2.in_(w.select(w.c3)))
+    assert str(query) == ('WITH "a" AS '
+                          '(SELECT "b"."c1" FROM "t1" AS "b") '
+                          'DELETE FROM "t" WHERE '
+                          '("c2" IN (SELECT "a"."c3" FROM "a" AS "a"))')
+    assert query.params == ()

@@ -29,16 +29,12 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-
-from sql import Column, Table, AliasManager
+from sql import AliasManager
 
 
-class TestColumn(unittest.TestCase):
-    def test_column(self):
-        column = Column(Table('t'), 'c')
-        assert str(column) == '"c"'
-        assert column.name == 'c'
+def test_column(column):
+    assert str(column) == '"c"'
+    assert column.name == 'c'
 
-        with AliasManager():
-            assert str(column) == '"a"."c"'
+    with AliasManager():
+        assert str(column) == '"a"."c"'

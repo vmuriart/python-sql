@@ -29,65 +29,65 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-
 from sql import Table, With
 from sql.functions import Abs
 
 
-class TestInsert(unittest.TestCase):
-    table = Table('t')
+def test_insert_default(table):
+    query = table.insert()
+    assert str(query) == 'INSERT INTO "t" DEFAULT VALUES'
+    assert query.params == ()
 
-    def test_insert_default(self):
-        query = self.table.insert()
-        assert str(query) == 'INSERT INTO "t" DEFAULT VALUES'
-        assert query.params == ()
 
-    def test_insert_values(self):
-        query = self.table.insert([self.table.c1, self.table.c2],
-                                  [['foo', 'bar']])
-        assert str(query) == 'INSERT INTO "t" ("c1", "c2") VALUES (%s, %s)'
-        assert query.params == ('foo', 'bar')
+def test_insert_values(table):
+    query = table.insert([table.c1, table.c2],
+                         [['foo', 'bar']])
+    assert str(query) == 'INSERT INTO "t" ("c1", "c2") VALUES (%s, %s)'
+    assert query.params == ('foo', 'bar')
 
-    def test_insert_many_values(self):
-        query = self.table.insert([self.table.c1, self.table.c2],
-                                  [['foo', 'bar'], ['spam', 'eggs']])
-        assert str(query) == ('INSERT INTO "t" ("c1", "c2") '
-                              'VALUES (%s, %s), (%s, %s)')
-        assert query.params == ('foo', 'bar', 'spam', 'eggs')
 
-    def test_insert_subselect(self):
-        t1 = Table('t1')
-        t2 = Table('t2')
-        subquery = t2.select(t2.c1, t2.c2)
-        query = t1.insert([t1.c1, t1.c2], subquery)
-        assert str(query) == ('INSERT INTO "t1" ("c1", "c2") '
-                              'SELECT "a"."c1", "a"."c2" FROM "t2" AS "a"')
-        assert query.params == ()
+def test_insert_many_values(table):
+    query = table.insert([table.c1, table.c2],
+                         [['foo', 'bar'], ['spam', 'eggs']])
+    assert str(query) == ('INSERT INTO "t" ("c1", "c2") '
+                          'VALUES (%s, %s), (%s, %s)')
+    assert query.params == ('foo', 'bar', 'spam', 'eggs')
 
-    def test_insert_function(self):
-        query = self.table.insert([self.table.c], [[Abs(-1)]])
-        assert str(query) == 'INSERT INTO "t" ("c") VALUES (ABS(%s))'
-        assert query.params == (-1,)
 
-    def test_insert_returning(self):
-        query = self.table.insert([self.table.c1, self.table.c2],
-                                  [['foo', 'bar']],
-                                  returning=[self.table.c1, self.table.c2])
-        assert str(query) == ('INSERT INTO "t" ("c1", "c2") '
-                              'VALUES (%s, %s) RETURNING "c1", "c2"')
-        assert query.params == ('foo', 'bar')
+def test_insert_subselect():
+    t1 = Table('t1')
+    t2 = Table('t2')
+    subquery = t2.select(t2.c1, t2.c2)
+    query = t1.insert([t1.c1, t1.c2], subquery)
+    assert str(query) == ('INSERT INTO "t1" ("c1", "c2") '
+                          'SELECT "a"."c1", "a"."c2" FROM "t2" AS "a"')
+    assert query.params == ()
 
-    def test_with(self):
-        t1 = Table('t1')
-        w = With(query=t1.select())
 
-        query = self.table.insert(
-            [self.table.c1],
-            with_=[w],
-            values=w.select())
-        assert str(query) == ('WITH "a" AS '
-                              '(SELECT * FROM "t1" AS "b") '
-                              'INSERT INTO "t" ("c1") '
-                              'SELECT * FROM "a" AS "a"')
-        assert query.params == ()
+def test_insert_function(table):
+    query = table.insert([table.c], [[Abs(-1)]])
+    assert str(query) == 'INSERT INTO "t" ("c") VALUES (ABS(%s))'
+    assert query.params == (-1,)
+
+
+def test_insert_returning(table):
+    query = table.insert([table.c1, table.c2],
+                         [['foo', 'bar']],
+                         returning=[table.c1, table.c2])
+    assert str(query) == ('INSERT INTO "t" ("c1", "c2") '
+                          'VALUES (%s, %s) RETURNING "c1", "c2"')
+    assert query.params == ('foo', 'bar')
+
+
+def test_with(table):
+    t1 = Table('t1')
+    w = With(query=t1.select())
+
+    query = table.insert([table.c1],
+                         with_=[w],
+                         values=w.select())
+    assert str(query) == ('WITH "a" AS '
+                          '(SELECT * FROM "t1" AS "b") '
+                          'INSERT INTO "t" ("c1") '
+                          'SELECT * FROM "a" AS "a"')
+    assert query.params == ()

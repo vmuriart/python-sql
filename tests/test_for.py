@@ -29,17 +29,15 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-
 from sql import For, Table
 
 
-class TestFor(unittest.TestCase):
-    def test_for(self):
-        for_ = For('UPDATE', Table('t1'), Table('t2'), nowait=True)
-        assert str(for_) == 'FOR UPDATE OF "t1", "t2" NOWAIT'
+def test_for():
+    for_ = For('UPDATE', Table('t1'), Table('t2'), nowait=True)
+    assert str(for_) == 'FOR UPDATE OF "t1", "t2" NOWAIT'
 
-    def test_for_single_table(self):
-        for_ = For('UPDATE')
-        for_.tables = Table('t1')
-        assert str(for_) == 'FOR UPDATE OF "t1"'
+
+def test_for_single_table():
+    for_ = For('UPDATE')
+    for_.tables = Table('t1')
+    assert str(for_) == 'FOR UPDATE OF "t1"'

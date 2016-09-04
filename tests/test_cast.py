@@ -29,20 +29,16 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-
-from sql import Cast, Column, Table
+from sql import Cast
 
 
-class TestCast(unittest.TestCase):
-    column = Column(Table('t'), 'c')
+def test_cast(column):
+    for cast in [Cast(column, 'int'), column.cast('int')]:
+        assert str(cast) == 'CAST("c" AS int)'
+        assert cast.params == ()
 
-    def test_cast(self):
-        for cast in [Cast(self.column, 'int'), self.column.cast('int')]:
-            assert str(cast) == 'CAST("c" AS int)'
-            assert cast.params == ()
 
-    def test_cast_no_expression(self):
-        cast = Cast(1.1, 'int')
-        assert str(cast) == 'CAST(%s AS int)'
-        assert cast.params == (1.1,)
+def test_cast_no_expression():
+    cast = Cast(1.1, 'int')
+    assert str(cast) == 'CAST(%s AS int)'
+    assert cast.params == (1.1,)

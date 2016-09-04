@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2011-2016, Cédric Krier
-# Copyright (c) 2011-2016, B2CK
 # Copyright (c) 2016-2016, Victor Uriarte
 # and contributors. See AUTHORS for more details.
 # All rights reserved.
@@ -29,51 +27,46 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from sql import Window
+import pytest
+
+import sql
 
 
-def test_window(table):
-    window = Window([table.c1, table.c2])
-
-    assert str(window) == 'PARTITION BY "c1", "c2"'
-    assert window.params == ()
+@pytest.fixture
+def table():
+    return sql.Table('t')
 
 
-def test_window_order(table):
-    window = Window([table.c], order_by=table.c)
-
-    assert str(window) == 'PARTITION BY "c" ORDER BY "c"'
-    assert window.params == ()
+@pytest.fixture
+def column(table):
+    return sql.Column(table, 'c')
 
 
-def test_window_range(table):
-    window = Window([table.c], frame='RANGE')
-
-    assert str(window) == ('PARTITION BY "c" RANGE '
-                           'BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW')
-    assert window.params == ()
-
-    window.start = -1
-    assert str(window) == ('PARTITION BY "c" RANGE '
-                           'BETWEEN 1 PRECEDING AND CURRENT ROW')
-    assert window.params == ()
-
-    window.start = 0
-    window.end = 1
-    assert str(window) == ('PARTITION BY "c" RANGE '
-                           'BETWEEN CURRENT ROW AND 1 FOLLOWING')
-    assert window.params == ()
-
-    window.start = 1
-    window.end = None
-    assert str(window) == ('PARTITION BY "c" RANGE '
-                           'BETWEEN 1 FOLLOWING AND UNBOUNDED FOLLOWING')
-    assert window.params == ()
+@pytest.fixture()
+def t1():
+    return sql.Table('t1')
 
 
-def test_window_rows(table):
-    window = Window([table.c], frame='ROWS')
+@pytest.fixture()
+def t2():
+    return sql.Table('t2')
 
-    assert str(window) == ('PARTITION BY "c" ROWS '
-                           'BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW')
-    assert window.params == ()
+
+@pytest.fixture()
+def t3():
+    return sql.Table('t3')
+
+
+@pytest.fixture()
+def query1(t1):
+    return t1.select()
+
+
+@pytest.fixture()
+def query2(t2):
+    return t2.select()
+
+
+@pytest.fixture()
+def query3(t3):
+    return t3.select()

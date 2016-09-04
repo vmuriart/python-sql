@@ -29,30 +29,28 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-
 from sql import Literal, Flavor
 
 
-class TestLiteral(unittest.TestCase):
-    def test_literal(self):
-        literal = Literal(1)
-        assert str(literal) == '%s'
-        assert literal.params == (1,)
-        assert literal.value == 1
+def test_literal():
+    literal = Literal(1)
+    assert str(literal) == '%s'
+    assert literal.params == (1,)
+    assert literal.value == 1
 
-    def test_no_boolean(self):
-        true = Literal(True)
-        false = Literal(False)
-        assert str(true) == '%s'
-        assert true.params == (True,)
-        assert str(false) == '%s'
-        assert false.params == (False,)
-        try:
-            Flavor.set(Flavor(no_boolean=True))
-            assert str(true) == '(1 = 1)'
-            assert str(false) == '(1 != 1)'
-            assert true.params == ()
-            assert false.params == ()
-        finally:
-            Flavor.set(Flavor())
+
+def test_no_boolean():
+    true = Literal(True)
+    false = Literal(False)
+    assert str(true) == '%s'
+    assert true.params == (True,)
+    assert str(false) == '%s'
+    assert false.params == (False,)
+    try:
+        Flavor.set(Flavor(no_boolean=True))
+        assert str(true) == '(1 = 1)'
+        assert str(false) == '(1 != 1)'
+        assert true.params == ()
+        assert false.params == ()
+    finally:
+        Flavor.set(Flavor())

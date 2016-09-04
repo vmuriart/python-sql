@@ -29,129 +29,130 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-
-from sql import Table, Flavor, Window, AliasManager
+from sql import Flavor, Window, AliasManager
 from sql.functions import (Function, FunctionKeyword, FunctionNotCallable, Abs,
                            Overlay, Trim, AtTimeZone, Div, CurrentTime, Rank)
 
 
-class TestFunctions(unittest.TestCase):
-    table = Table('t')
+def test_abs(table):
+    abs_ = Abs(table.c1)
+    assert str(abs_) == 'ABS("c1")'
+    assert abs_.params == ()
 
-    def test_abs(self):
-        abs_ = Abs(self.table.c1)
-        assert str(abs_) == 'ABS("c1")'
-        assert abs_.params == ()
+    abs_ = Abs(-12)
+    assert str(abs_) == 'ABS(%s)'
+    assert abs_.params == (-12,)
 
-        abs_ = Abs(-12)
-        assert str(abs_) == 'ABS(%s)'
-        assert abs_.params == (-12,)
 
-    def test_mapping(self):
-        class MyAbs(Function):
-            _function = 'MY_ABS'
-            params = ('test',)
+def test_mapping(table):
+    class MyAbs(Function):
+        _function = 'MY_ABS'
+        params = ('test',)
 
-        class MyOverlay(FunctionKeyword):
-            _function = 'MY_OVERLAY'
-            _keywords = ('', 'PLACING', 'FROM', 'FOR')
+    class MyOverlay(FunctionKeyword):
+        _function = 'MY_OVERLAY'
+        _keywords = ('', 'PLACING', 'FROM', 'FOR')
 
-        class MyCurrentTime(FunctionNotCallable):
-            _function = 'MY_CURRENT_TIME'
+    class MyCurrentTime(FunctionNotCallable):
+        _function = 'MY_CURRENT_TIME'
 
-        class MyTrim(Trim):
-            _function = 'MY_TRIM'
+    class MyTrim(Trim):
+        _function = 'MY_TRIM'
 
-        abs_ = Abs(self.table.c1)
-        overlay = Overlay(self.table.c1, 'test', 2)
-        current_time = CurrentTime()
-        trim = Trim(' test ')
-        flavor = Flavor(function_mapping={
-            Abs: MyAbs,
-            Overlay: MyOverlay,
-            CurrentTime: MyCurrentTime,
-            Trim: MyTrim,
-        })
-        Flavor.set(flavor)
-        try:
-            assert str(abs_) == 'MY_ABS("c1")'
-            assert abs_.params == ('test',)
+    abs_ = Abs(table.c1)
+    overlay = Overlay(table.c1, 'test', 2)
+    current_time = CurrentTime()
+    trim = Trim(' test ')
+    flavor = Flavor(function_mapping={
+        Abs: MyAbs,
+        Overlay: MyOverlay,
+        CurrentTime: MyCurrentTime,
+        Trim: MyTrim,
+    })
+    Flavor.set(flavor)
+    try:
+        assert str(abs_) == 'MY_ABS("c1")'
+        assert abs_.params == ('test',)
 
-            assert str(overlay) == 'MY_OVERLAY("c1" PLACING %s FROM %s)'
-            assert overlay.params == ('test', 2)
+        assert str(overlay) == 'MY_OVERLAY("c1" PLACING %s FROM %s)'
+        assert overlay.params == ('test', 2)
 
-            assert str(current_time) == 'MY_CURRENT_TIME'
-            assert current_time.params == ()
-
-            assert str(trim) == 'MY_TRIM(BOTH %s FROM %s)'
-            assert trim.params == (' ', ' test ',)
-        finally:
-            Flavor.set(Flavor())
-
-    def test_overlay(self):
-        overlay = Overlay(self.table.c1, 'test', 3)
-        assert str(overlay) == 'OVERLAY("c1" PLACING %s FROM %s)'
-        assert overlay.params == ('test', 3)
-        overlay = Overlay(self.table.c1, 'test', 3, 7)
-        assert str(overlay) == 'OVERLAY("c1" PLACING %s FROM %s FOR %s)'
-        assert overlay.params == ('test', 3, 7)
-
-    def test_trim(self):
-        trim = Trim(' test ')
-        assert str(trim) == 'TRIM(BOTH %s FROM %s)'
-        assert trim.params == (' ', ' test ',)
-
-        trim = Trim(self.table.c1)
-        assert str(trim) == 'TRIM(BOTH %s FROM "c1")'
-        assert trim.params == (' ',)
-
-    def test_at_time_zone(self):
-        time_zone = AtTimeZone(self.table.c1, 'UTC')
-        assert str(time_zone) == '"c1" AT TIME ZONE %s'
-        assert time_zone.params == ('UTC',)
-
-    def test_at_time_zone_mapping(self):
-        class MyAtTimeZone(Function):
-            _function = 'MY_TIMEZONE'
-
-        time_zone = AtTimeZone(self.table.c1, 'UTC')
-        flavor = Flavor(function_mapping={
-            AtTimeZone: MyAtTimeZone,
-        })
-        Flavor.set(flavor)
-        try:
-            assert str(time_zone) == 'MY_TIMEZONE("c1", %s)'
-            assert time_zone.params == ('UTC',)
-        finally:
-            Flavor.set(Flavor())
-
-    def test_div(self):
-        for div in [Div(self.table.c1, self.table.c2),
-                    self.table.c1 // self.table.c2]:
-            assert str(div) == 'DIV("c1", "c2")'
-            assert div.params == ()
-
-    def test_current_time(self):
-        current_time = CurrentTime()
-        assert str(current_time) == 'CURRENT_TIME'
+        assert str(current_time) == 'MY_CURRENT_TIME'
         assert current_time.params == ()
 
+        assert str(trim) == 'MY_TRIM(BOTH %s FROM %s)'
+        assert trim.params == (' ', ' test ',)
+    finally:
+        Flavor.set(Flavor())
 
-class TestWindowFunction(unittest.TestCase):
-    def test_window(self):
-        t = Table('t')
-        function = Rank(t.c, window=Window([]))
 
-        with AliasManager():
-            assert str(function) == 'RANK("a"."c") OVER "b"'
-        assert function.params == ()
+def test_overlay(table):
+    overlay = Overlay(table.c1, 'test', 3)
+    assert str(overlay) == 'OVERLAY("c1" PLACING %s FROM %s)'
+    assert overlay.params == ('test', 3)
 
-    def test_filter(self):
-        t = Table('t')
-        function = Rank(t.c, filter_=t.c > 0, window=Window([]))
+    overlay = Overlay(table.c1, 'test', 3, 7)
+    assert str(overlay) == 'OVERLAY("c1" PLACING %s FROM %s FOR %s)'
+    assert overlay.params == ('test', 3, 7)
 
-        with AliasManager():
-            assert str(function) == ('RANK("a"."c") FILTER '
-                                     '(WHERE ("a"."c" > %s)) OVER "b"')
-        assert function.params == (0,)
+
+def test_trim(table):
+    trim = Trim(' test ')
+    assert str(trim) == 'TRIM(BOTH %s FROM %s)'
+    assert trim.params == (' ', ' test ',)
+
+    trim = Trim(table.c1)
+    assert str(trim) == 'TRIM(BOTH %s FROM "c1")'
+    assert trim.params == (' ',)
+
+
+def test_at_time_zone(table):
+    time_zone = AtTimeZone(table.c1, 'UTC')
+    assert str(time_zone) == '"c1" AT TIME ZONE %s'
+    assert time_zone.params == ('UTC',)
+
+
+def test_at_time_zone_mapping(table):
+    class MyAtTimeZone(Function):
+        _function = 'MY_TIMEZONE'
+
+    time_zone = AtTimeZone(table.c1, 'UTC')
+    flavor = Flavor(function_mapping={
+        AtTimeZone: MyAtTimeZone,
+    })
+    Flavor.set(flavor)
+    try:
+        assert str(time_zone) == 'MY_TIMEZONE("c1", %s)'
+        assert time_zone.params == ('UTC',)
+    finally:
+        Flavor.set(Flavor())
+
+
+def test_div(table):
+    for div in [Div(table.c1, table.c2),
+                table.c1 // table.c2]:
+        assert str(div) == 'DIV("c1", "c2")'
+        assert div.params == ()
+
+
+def test_current_time():
+    current_time = CurrentTime()
+    assert str(current_time) == 'CURRENT_TIME'
+    assert current_time.params == ()
+
+
+def test_window(table):
+    function = Rank(table.c, window=Window([]))
+
+    with AliasManager():
+        assert str(function) == 'RANK("a"."c") OVER "b"'
+    assert function.params == ()
+
+
+def test_filter(table):
+    function = Rank(table.c, filter_=table.c > 0, window=Window([]))
+
+    with AliasManager():
+        assert str(function) == ('RANK("a"."c") FILTER '
+                                 '(WHERE ("a"."c" > %s)) OVER "b"')
+    assert function.params == (0,)

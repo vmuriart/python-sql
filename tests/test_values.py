@@ -29,30 +29,30 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-
 from sql import Values
 
 
-class TestValues(unittest.TestCase):
-    def test_single_values(self):
-        values = Values([[1]])
-        assert str(values) == 'VALUES (%s)'
-        assert values.params == (1,)
+def test_single_values():
+    values = Values([[1]])
+    assert str(values) == 'VALUES (%s)'
+    assert values.params == (1,)
 
-    def test_many_values(self):
-        values = Values([[1, 2], [3, 4]])
-        assert str(values) == 'VALUES (%s, %s), (%s, %s)'
-        assert values.params == (1, 2, 3, 4)
 
-    def test_select(self):
-        values = Values([[1], [2], [3]])
-        query = values.select()
-        assert str(query) == 'SELECT * FROM (VALUES (%s), (%s), (%s)) AS "a"'
-        assert query.params == (1, 2, 3)
+def test_many_values():
+    values = Values([[1, 2], [3, 4]])
+    assert str(values) == 'VALUES (%s, %s), (%s, %s)'
+    assert values.params == (1, 2, 3, 4)
 
-    def test_union(self):
-        values = Values([[1]])
-        values |= Values([[2]])
-        assert str(values) == 'VALUES (%s) UNION VALUES (%s)'
-        assert values.params == (1, 2)
+
+def test_select():
+    values = Values([[1], [2], [3]])
+    query = values.select()
+    assert str(query) == 'SELECT * FROM (VALUES (%s), (%s), (%s)) AS "a"'
+    assert query.params == (1, 2, 3)
+
+
+def test_union():
+    values = Values([[1]])
+    values |= Values([[2]])
+    assert str(values) == 'VALUES (%s) UNION VALUES (%s)'
+    assert values.params == (1, 2)

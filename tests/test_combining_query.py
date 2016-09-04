@@ -29,48 +29,42 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-
-from sql import Table, Union
+from sql import Union
 
 
-class TestUnion(unittest.TestCase):
-    q1 = Table('t1').select()
-    q2 = Table('t2').select()
-    q3 = Table('t3').select()
+def test_two_query_union(query1, query2):
+    query = Union(query1, query2)
+    assert str(query) == ('SELECT * FROM "t1" AS "a" UNION '
+                          'SELECT * FROM "t2" AS "b"')
+    assert query.params == ()
 
-    def test_union2(self):
-        query = Union(self.q1, self.q2)
-        assert str(query) == ('SELECT * FROM "t1" AS "a" UNION '
-                              'SELECT * FROM "t2" AS "b"')
-        assert query.params == ()
+    query = query1 | query2
+    assert str(query) == ('SELECT * FROM "t1" AS "a" UNION '
+                          'SELECT * FROM "t2" AS "b"')
+    assert query.params == ()
 
-        query = self.q1 | self.q2
-        assert str(query) == ('SELECT * FROM "t1" AS "a" UNION '
-                              'SELECT * FROM "t2" AS "b"')
-        assert query.params == ()
 
-    def test_union3(self):
-        query = Union(self.q1, self.q2, self.q3)
-        assert str(query) == ('SELECT * FROM "t1" AS "a" UNION '
-                              'SELECT * FROM "t2" AS "b" UNION '
-                              'SELECT * FROM "t3" AS "c"')
-        assert query.params == ()
+def test_three_query_union(query1, query2, query3):
+    query = Union(query1, query2, query3)
+    assert str(query) == ('SELECT * FROM "t1" AS "a" UNION '
+                          'SELECT * FROM "t2" AS "b" UNION '
+                          'SELECT * FROM "t3" AS "c"')
+    assert query.params == ()
 
-        query = Union(Union(self.q1, self.q2), self.q3)
-        assert str(query) == ('SELECT * FROM "t1" AS "a" UNION '
-                              'SELECT * FROM "t2" AS "b" UNION '
-                              'SELECT * FROM "t3" AS "c"')
-        assert query.params == ()
+    query = Union(Union(query1, query2), query3)
+    assert str(query) == ('SELECT * FROM "t1" AS "a" UNION '
+                          'SELECT * FROM "t2" AS "b" UNION '
+                          'SELECT * FROM "t3" AS "c"')
+    assert query.params == ()
 
-        query = Union(self.q1, Union(self.q2, self.q3))
-        assert str(query) == ('SELECT * FROM "t1" AS "a" UNION '
-                              'SELECT * FROM "t2" AS "b" UNION '
-                              'SELECT * FROM "t3" AS "c"')
-        assert query.params == ()
+    query = Union(query1, Union(query2, query3))
+    assert str(query) == ('SELECT * FROM "t1" AS "a" UNION '
+                          'SELECT * FROM "t2" AS "b" UNION '
+                          'SELECT * FROM "t3" AS "c"')
+    assert query.params == ()
 
-        query = self.q1 | self.q2 | self.q3
-        assert str(query) == ('SELECT * FROM "t1" AS "a" UNION '
-                              'SELECT * FROM "t2" AS "b" UNION '
-                              'SELECT * FROM "t3" AS "c"')
-        assert query.params == ()
+    query = query1 | query2 | query3
+    assert str(query) == ('SELECT * FROM "t1" AS "a" UNION '
+                          'SELECT * FROM "t2" AS "b" UNION '
+                          'SELECT * FROM "t3" AS "c"')
+    assert query.params == ()

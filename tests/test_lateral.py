@@ -29,32 +29,30 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-
 from sql import Table, Lateral, From
 from sql.functions import Function
 
 
-class TestLateral(unittest.TestCase):
-    def test_lateral_select(self):
-        t1 = Table('t1')
-        t2 = Table('t2')
-        lateral = Lateral(t2.select(where=t2.id == t1.t2))
-        query = From([t1, lateral]).select()
+def test_lateral_select():
+    t1 = Table('t1')
+    t2 = Table('t2')
+    lateral = Lateral(t2.select(where=t2.id == t1.t2))
+    query = From([t1, lateral]).select()
 
-        assert str(query) == ('SELECT * FROM "t1" AS "a", LATERAL '
-                              '(SELECT * FROM "t2" AS "c" '
-                              'WHERE ("c"."id" = "a"."t2")) AS "b"')
-        assert query.params == ()
+    assert str(query) == ('SELECT * FROM "t1" AS "a", LATERAL '
+                          '(SELECT * FROM "t2" AS "c" '
+                          'WHERE ("c"."id" = "a"."t2")) AS "b"')
+    assert query.params == ()
 
-    def test_lateral_function(self):
-        class Func(Function):
-            _function = 'FUNC'
 
-        t = Table('t')
-        lateral = Lateral(Func(t.a))
-        query = From([t, lateral]).select()
+def test_lateral_function():
+    class Func(Function):
+        _function = 'FUNC'
 
-        assert str(query) == ('SELECT * FROM "t" AS "a", LATERAL '
-                              'FUNC("a"."a") AS "b"')
-        assert query.params == ()
+    t = Table('t')
+    lateral = Lateral(Func(t.a))
+    query = From([t, lateral]).select()
+
+    assert str(query) == ('SELECT * FROM "t" AS "a", LATERAL '
+                          'FUNC("a"."a") AS "b"')
+    assert query.params == ()

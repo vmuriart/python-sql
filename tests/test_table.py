@@ -29,21 +29,19 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-
-import unittest
-
 from sql import Table
 
 
-class TestTable(unittest.TestCase):
-    def test_name(self):
-        t = Table('mytable')
-        assert str(t) == '"mytable"'
+def test_name():
+    t = Table('mytable')
+    assert str(t) == '"mytable"'
 
-    def test_schema(self):
-        t = Table('mytable', schema='myschema')
-        assert str(t) == '"myschema"."mytable"'
 
-    def test_database(self):
-        t = Table('mytable', database='mydatabase', schema='myschema')
-        assert str(t) == '"mydatabase"."myschema"."mytable"'
+def test_schema():
+    t = Table('mytable', schema='myschema')
+    assert str(t) == '"myschema"."mytable"'
+
+
+def test_database():
+    t = Table('mytable', database='mydatabase', schema='myschema')
+    assert str(t) == '"mydatabase"."myschema"."mytable"'
