@@ -640,8 +640,7 @@ class Delete(WithQuery):
                 where = ' WHERE ' + text_type(self.where)
             returning = ''
             if self.returning:
-                returning = ' RETURNING ' + ', '.join(
-                    map(text_type, self.returning))
+                returning = ' RETURNING ' + csv_str(self.returning)
             return self._with_str() + 'DELETE FROM{} {}'.format(
                 only, self.table) + where + returning
 
@@ -754,10 +753,9 @@ class Join(FromItem):
     def __str__(self):
         join = '{} {} JOIN {}'.format(
             From([self.left]), self.type_, From([self.right]))
+        condition = ''
         if self.condition:
             condition = ' ON {}'.format(self.condition)
-        else:
-            condition = ''
         return join + condition
 
     @property
@@ -1101,9 +1099,7 @@ class Window(object):
 
     @order_by.setter
     def order_by(self, value):
-        if isinstance(value, Expression):
-            value = [value]
-        self._order_by = value
+        self._order_by = [value] if isinstance(value, Expression) else value
 
     @property
     def alias(self):
@@ -1232,9 +1228,11 @@ class For(object):
 
     def __init__(self, type_, *tables, **kwargs):
         self._tables = None
-        self._type_ = None
         self.tables = list(tables)
+
+        self._type_ = None
         self.type_ = type_
+
         self.nowait = kwargs.get('nowait')
 
     @property
