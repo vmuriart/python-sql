@@ -29,15 +29,15 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from sql import For, Table
+from sql import For
 
 
-def test_for():
-    for_ = For('UPDATE', Table('t1'), Table('t2'), nowait=True)
+def test_for(t1, t2):
+    for_ = For('UPDATE', t1, t2, nowait=True)
     assert str(for_) == 'FOR UPDATE OF "t1", "t2" NOWAIT'
 
 
-def test_for_single_table():
+def test_for_single_table(t1):
     for_ = For('UPDATE')
-    for_.tables = Table('t1')
+    for_.tables = t1
     assert str(for_) == 'FOR UPDATE OF "t1"'

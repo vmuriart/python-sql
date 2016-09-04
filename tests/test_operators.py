@@ -31,7 +31,7 @@
 
 from array import array
 
-from sql import Table, Literal, Null, Flavor
+from sql import Literal, Null, Flavor
 from sql.operators import (
     And, Or, Not, Neg, Pos, Less, Greater, LessEqual, GreaterEqual, Equal,
     NotEqual, Sub, Mul, Div, Mod, Pow, Abs, LShift, RShift, Like, NotLike,
@@ -311,14 +311,13 @@ def test_not_ilike(table):
         Flavor.set(Flavor())
 
 
-def test_in(table):
+def test_in(table, t2):
     for in_ in [In(table.c1, [table.c2, 1, Null]),
                 ~NotIn(table.c1, [table.c2, 1, Null]),
                 ~~In(table.c1, [table.c2, 1, Null])]:
         assert str(in_) == '("c1" IN ("c2", %s, %s))'
         assert in_.params == (1, None)
 
-    t2 = Table('t2')
     in_ = In(table.c1, t2.select(t2.c2))
     assert str(in_) == '("c1" IN (SELECT "a"."c2" FROM "t2" AS "a"))'
     assert in_.params == ()

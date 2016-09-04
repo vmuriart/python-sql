@@ -29,7 +29,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from sql import Table, With
+from sql import With
 from sql.functions import Abs
 
 
@@ -54,9 +54,7 @@ def test_insert_many_values(table):
     assert query.params == ('foo', 'bar', 'spam', 'eggs')
 
 
-def test_insert_subselect():
-    t1 = Table('t1')
-    t2 = Table('t2')
+def test_insert_subselect(t1, t2):
     subquery = t2.select(t2.c1, t2.c2)
     query = t1.insert([t1.c1, t1.c2], subquery)
     assert str(query) == ('INSERT INTO "t1" ("c1", "c2") '
@@ -71,21 +69,17 @@ def test_insert_function(table):
 
 
 def test_insert_returning(table):
-    query = table.insert([table.c1, table.c2],
-                         [['foo', 'bar']],
+    query = table.insert([table.c1, table.c2], [['foo', 'bar']],
                          returning=[table.c1, table.c2])
     assert str(query) == ('INSERT INTO "t" ("c1", "c2") '
                           'VALUES (%s, %s) RETURNING "c1", "c2"')
     assert query.params == ('foo', 'bar')
 
 
-def test_with(table):
-    t1 = Table('t1')
+def test_with(table, t1):
     w = With(query=t1.select())
 
-    query = table.insert([table.c1],
-                         with_=[w],
-                         values=w.select())
+    query = table.insert([table.c1], with_=[w], values=w.select())
     assert str(query) == ('WITH "a" AS '
                           '(SELECT * FROM "t1" AS "b") '
                           'INSERT INTO "t" ("c1") '

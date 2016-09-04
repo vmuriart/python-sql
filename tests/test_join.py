@@ -29,13 +29,11 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from sql import Join, Table, AliasManager
+from sql import Join, AliasManager
 from sql.functions import Now
 
 
-def test_join():
-    t1 = Table('t1')
-    t2 = Table('t2')
+def test_join(t1, t2):
     join = Join(t1, t2)
     with AliasManager():
         assert str(join) == '"t1" AS "a" INNER JOIN "t2" AS "b"'
@@ -47,9 +45,7 @@ def test_join():
                              '"t2" AS "b" ON ("a"."c" = "b"."c")')
 
 
-def test_join_subselect():
-    t1 = Table('t1')
-    t2 = Table('t2')
+def test_join_subselect(t1, t2):
     select = t2.select()
     join = Join(t1, select)
     join.condition = t1.c == select.c
@@ -60,8 +56,7 @@ def test_join_subselect():
         assert join.params == ()
 
 
-def test_join_function():
-    t1 = Table('t1')
+def test_join_function(t1):
     join = Join(t1, Now())
     with AliasManager():
         assert str(join) == '"t1" AS "a" INNER JOIN NOW() AS "b"'

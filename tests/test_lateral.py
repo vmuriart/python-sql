@@ -29,13 +29,11 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from sql import Table, Lateral, From
+from sql import Lateral, From
 from sql.functions import Function
 
 
-def test_lateral_select():
-    t1 = Table('t1')
-    t2 = Table('t2')
+def test_lateral_select(t1, t2):
     lateral = Lateral(t2.select(where=t2.id == t1.t2))
     query = From([t1, lateral]).select()
 
@@ -45,13 +43,12 @@ def test_lateral_select():
     assert query.params == ()
 
 
-def test_lateral_function():
+def test_lateral_function(table):
     class Func(Function):
         _function = 'FUNC'
 
-    t = Table('t')
-    lateral = Lateral(Func(t.a))
-    query = From([t, lateral]).select()
+    lateral = Lateral(Func(table.a))
+    query = From([table, lateral]).select()
 
     assert str(query) == ('SELECT * FROM "t" AS "a", LATERAL '
                           'FUNC("a"."a") AS "b"')

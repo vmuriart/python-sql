@@ -29,7 +29,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from sql import Table, Literal, With
+from sql import Literal, With
 
 
 def test_update1(table):
@@ -42,18 +42,14 @@ def test_update1(table):
     assert query.params == ('foo', True)
 
 
-def test_update2():
-    t1 = Table('t1')
-    t2 = Table('t2')
+def test_update2(t1, t2):
     query = t1.update([t1.c], ['foo'], from_=[t2], where=(t1.c == t2.c))
     assert str(query) == ('UPDATE "t1" AS "b" SET "c" = %s '
                           'FROM "t2" AS "a" WHERE ("b"."c" = "a"."c")')
     assert query.params == ('foo',)
 
 
-def test_update_subselect():
-    t1 = Table('t1')
-    t2 = Table('t2')
+def test_update_subselect(t1, t2):
     query_list = t1.update([t1.c], [t2.select(t2.c, where=t2.i == t1.i)])
     query_nolist = t1.update([t1.c], t2.select(t2.c, where=t2.i == t1.i))
     for query in [query_list, query_nolist]:
@@ -64,18 +60,15 @@ def test_update_subselect():
 
 
 def test_update_returning(table):
-    query = table.update([table.c], ['foo'],
-                         returning=[table.c])
+    query = table.update([table.c], ['foo'], returning=[table.c])
     assert str(query) == 'UPDATE "t" SET "c" = %s RETURNING "t"."c"'
     assert query.params == ('foo',)
 
 
-def test_with(table):
-    t1 = Table('t1')
+def test_with(table, t1):
     w = With(query=t1.select(t1.c1))
 
-    query = table.update([table.c2],
-                         with_=[w],
+    query = table.update([table.c2], with_=[w],
                          values=[w.select(w.c3, where=w.c4 == 2)])
     assert str(query) == ('WITH "b" AS '
                           '(SELECT "c"."c1" FROM "t1" AS "c") '

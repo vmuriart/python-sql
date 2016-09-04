@@ -31,7 +31,7 @@
 
 from copy import deepcopy
 
-from sql import Table, Join, Union, Literal, Flavor, For, With, Window, Select
+from sql import Join, Union, Literal, Flavor, For, With, Window, Select
 from sql.aggregate import Min
 from sql.functions import Now, Function, Rank, DatePart
 
@@ -57,19 +57,16 @@ def test_select3(table):
     assert query.params == ('foo',)
 
 
-def test_select_from_list(table):
-    t2 = Table('t2')
-    t3 = Table('t3')
+def test_select_from_list(table, t2, t3):
     query = (table + t2 + t3).select(table.c, getattr(t2, '*'))
     assert str(query) == ('SELECT "a"."c", "b".* '
                           'FROM "t" AS "a", "t2" AS "b", "t3" AS "c"')
     assert query.params == ()
 
 
-def test_select_union(table):
-    query1 = table.select()
-    query2 = Table('t2').select()
-    union = query1 | query2
+def test_select_union(table, query2):
+    query = table.select()
+    union = query | query2
     assert str(union) == ('SELECT * FROM "t" AS "a" UNION '
                           'SELECT * FROM "t2" AS "b"')
     union.all_ = True
@@ -78,46 +75,41 @@ def test_select_union(table):
     assert str(union.select()) == ('SELECT * FROM '
                                    '(SELECT * FROM "t" AS "b" UNION ALL '
                                    'SELECT * FROM "t2" AS "c") AS "a"')
-    query1.where = table.c == 'foo'
+    query.where = table.c == 'foo'
     assert str(union) == ('SELECT * FROM "t" AS "a" '
                           'WHERE ("a"."c" = %s) UNION ALL '
                           'SELECT * FROM "t2" AS "b"')
     assert union.params == ('foo',)
 
-    union = Union(query1)
-    assert str(union) == str(query1)
-    assert union.params == query1.params
+    union = Union(query)
+    assert str(union) == str(query)
+    assert union.params == query.params
 
 
-def test_select_union_order(table):
-    query1 = table.select()
-    query2 = Table('t2').select()
-    union = query1 | query2
+def test_select_union_order(table, query2):
+    query = table.select()
+    union = query | query2
     union.order_by = Literal(1)
     assert str(union) == ('SELECT * FROM "t" AS "a" UNION '
                           'SELECT * FROM "t2" AS "b" ORDER BY %s')
     assert union.params == (1,)
 
 
-def test_select_intersect(table):
-    query1 = table.select()
-    query2 = Table('t2').select()
-    intersect = query1 & query2
+def test_select_intersect(table, query2):
+    query = table.select()
+    intersect = query & query2
     assert str(intersect) == ('SELECT * FROM "t" AS "a" INTERSECT '
                               'SELECT * FROM "t2" AS "b"')
 
 
-def test_select_except(table):
-    query1 = table.select()
-    query2 = Table('t2').select()
-    except_ = query1 - query2
+def test_select_except(table, query2):
+    query = table.select()
+    except_ = query - query2
     assert str(except_) == ('SELECT * FROM "t" AS "a" EXCEPT '
                             'SELECT * FROM "t2" AS "b"')
 
 
-def test_select_join():
-    t1 = Table('t1')
-    t2 = Table('t2')
+def test_select_join(t1, t2):
     join = Join(t1, t2)
 
     assert str(join.select()) == ('SELECT * FROM "t1" AS "a" '
@@ -127,8 +119,7 @@ def test_select_join():
                                                   'INNER JOIN "t2" AS "b"')
 
 
-def test_select_subselect():
-    t1 = Table('t1')
+def test_select_subselect(t1):
     select = t1.select()
     assert str(select.select()) == ('SELECT * FROM '
                                     '(SELECT * FROM "t1" AS "b") AS "a"')

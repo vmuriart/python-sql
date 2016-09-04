@@ -29,7 +29,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from sql import Table, With
+from sql import With
 
 
 def test_delete1(table):
@@ -44,9 +44,7 @@ def test_delete2(table):
     assert query.params == ('foo',)
 
 
-def test_delete3():
-    t1 = Table('t1')
-    t2 = Table('t2')
+def test_delete3(t1, t2):
     query = t1.delete(where=(t1.c.in_(t2.select(t2.c))))
     assert str(query) == ('DELETE FROM "t1" WHERE '
                           '("c" IN (SELECT "a"."c" FROM "t2" AS "a"))')
@@ -59,8 +57,7 @@ def test_delete_returning(table):
     assert query.params == ()
 
 
-def test_with(table):
-    t1 = Table('t1')
+def test_with(table, t1):
     w = With(query=t1.select(t1.c1))
 
     query = table.delete(with_=[w],
