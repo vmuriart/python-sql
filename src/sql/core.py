@@ -314,7 +314,7 @@ class SelectQuery(WithQuery):
 
 
 class Select(FromItem, SelectQuery):
-    __slots__ = ('_columns', 'where', '_group_by', 'having', '_for_', 'from_')
+    __slots__ = ('_columns', 'where', '_group_by', 'having', 'from_')
 
     def __init__(self, columns, from_=None, where=None, group_by=None,
                  having=None, **kwargs):
