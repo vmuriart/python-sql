@@ -76,17 +76,17 @@ class Operator(Expression):
         return tuple(convert(self._operands))
 
     def _format(self, operand, param=None):
+        par = '({})'.format
         if param is None:
             param = Flavor.get().param
         if isinstance(operand, Expression):
             return text_type(operand)
         elif isinstance(operand, (Select, CombiningQuery)):
-            return '({})'.format(operand)
+            return par(operand)
         elif isinstance(operand, (list, tuple)):
-            return '(' + ', '.join(self._format(o, param)
-                                   for o in operand) + ')'
+            return par(', '.join(self._format(o, param) for o in operand))
         elif isinstance(operand, array):
-            return '(' + ', '.join((param,) * len(operand)) + ')'
+            return par(', '.join((param,) * len(operand)))
         else:
             return param
 

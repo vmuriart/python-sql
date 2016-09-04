@@ -499,9 +499,8 @@ class WindowFunction(Function):
 
     def __str__(self):
         function = super(WindowFunction, self).__str__()
-        filter_ = ''
-        if self.filter_:
-            filter_ = ' FILTER (WHERE {})'.format(self.filter_)
+        filter_ = ' FILTER (WHERE {})'.format
+        filter_ = filter_(self.filter_) if self.filter_ else ''
         over = ' OVER "{}"'.format(self.window.alias)
         return function + filter_ + over
 

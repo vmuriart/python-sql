@@ -58,12 +58,13 @@ class Case(Conditional):
         self.else_ = kwargs.get('else_')
 
     def __str__(self):
+        when_tpl = 'WHEN {} THEN {} '.format
+        else_tpl = 'ELSE {} '.format
         case = 'CASE '
         for cond, result in self.whens:
-            case += 'WHEN {} THEN {} '.format(
-                self._format(cond), self._format(result))
+            case += when_tpl(self._format(cond), self._format(result))
         if self.else_ is not None:
-            case += 'ELSE {} '.format(self._format(self.else_))
+            case += else_tpl(self._format(self.else_))
         case += 'END'
         return case
 
@@ -95,8 +96,8 @@ class Coalesce(Conditional):
         self.values = args
 
     def __str__(self):
-        return (self._conditional + '(' +
-                csv_map(self._format, self.values) + ')')
+        par = '({})'.format
+        return self._conditional + par(csv_map(self._format, self.values))
 
     @property
     def params(self):
