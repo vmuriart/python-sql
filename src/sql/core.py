@@ -1003,9 +1003,8 @@ class Literal(Expression):
 
     @property
     def params(self):
-        if Flavor.get().no_boolean:
-            if self.value is True or self.value is False:
-                return tuple()
+        if Flavor.get().no_boolean and type(self.value) is bool:
+            return tuple()
         return self.value,
 
 
