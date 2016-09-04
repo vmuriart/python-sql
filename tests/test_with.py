@@ -29,7 +29,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from sql import AliasManager, Literal, Values, With, WithQuery
+from sql import AliasManager, Literal, With, WithQuery
 
 
 def test_with(table):
@@ -64,18 +64,3 @@ def test_with_query(table):
                                   'WHERE ("b"."id" = %s)), "c" AS '
                                   '(SELECT * FROM "a" AS "a") ')
         assert wq._with_params() == (1,)
-
-
-def test_recursive():
-    upto10 = With('n', recursive=True)
-    upto10.query = Values([(1,)])
-    upto10.query |= upto10.select(upto10.n + Literal(1),
-                                  where=upto10.n < Literal(100))
-    upto10.query.all_ = True
-
-    q = upto10.select(with_=[upto10])
-    assert str(q) == ('WITH RECURSIVE "a" ("n") AS '
-                      '(VALUES (%s) UNION ALL SELECT ("a"."n" + %s) '
-                      'FROM "a" AS "a" WHERE ("a"."n" < %s)) '
-                      'SELECT * FROM "a" AS "a"')
-    assert q.params == (1, 1, 100)

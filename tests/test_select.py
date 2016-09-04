@@ -31,7 +31,7 @@
 
 from copy import deepcopy
 
-from sql import Join, Union, Literal, Flavor, For, With, Window, Select
+from sql import Join, Union, Literal, Flavor, With, Window, Select
 from sql.aggregate import Min
 from sql.functions import Now, Function, Rank, DatePart
 
@@ -298,12 +298,6 @@ def test_select_rownum(table):
     finally:
         Flavor.set(Flavor())
 
-
-def test_select_for(table):
-    c = table.c
-    query = table.select(c, for_=For('UPDATE'))
-    assert str(query) == 'SELECT "a"."c" FROM "t" AS "a" FOR UPDATE'
-    assert query.params == ()
 
 
 def test_copy(table):

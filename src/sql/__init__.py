@@ -37,11 +37,11 @@ from sql.conditionals import (
     Case, Coalesce, NullIf, Greatest, Least)
 
 from sql.core import (
-    Flavor, AliasManager, Query, WithQuery, FromItem, Lateral, With,
-    SelectQuery, Select, Insert, Update, Delete, CombiningQuery, Union,
-    Intersect, Except, Table, Join, From, Values, Expression, Literal, _Rownum,
+    Flavor, AliasManager, Query, WithQuery, FromItem, With,
+    SelectQuery, Select, CombiningQuery, Union,
+    Intersect, Except, Table, Join, From, Expression, Literal, _Rownum,
     Column, As, Cast, Window, Order, Asc, Desc, NullOrder, NullsFirst,
-    NullsLast, For, Null, _rownum)
+    NullsLast, Null, _rownum)
 
 from sql.functions import (
     Abs, Cbrt, Ceil, Degrees, Div, Exp, Floor, Ln,
@@ -73,12 +73,12 @@ from sql.operators import (
 __version__ = '0.9.0-dev0'
 __all__ = (
     # Core
-    'Flavor', 'AliasManager', 'Query', 'WithQuery', 'FromItem', 'Lateral',
-    'With', 'SelectQuery', 'Select', 'Insert', 'Update', 'Delete',
+    'Flavor', 'AliasManager', 'Query', 'WithQuery', 'FromItem',
+    'With', 'SelectQuery', 'Select',
     'CombiningQuery', 'Union', 'Intersect', 'Except', 'Table', 'Join', 'From',
-    'Values', 'Expression', 'Literal', '_Rownum', 'Column', 'As', 'Cast',
+    'Expression', 'Literal', '_Rownum', 'Column', 'As', 'Cast',
     'Window', 'Order', 'Asc', 'Desc', 'NullOrder', 'NullsFirst', 'NullsLast',
-    'For', 'Null', '_rownum',
+    'Null', '_rownum',
 
     # Aggregate
     'Avg', 'BitAnd', 'BitOr', 'BoolAnd', 'BoolOr', 'Count', 'Every',

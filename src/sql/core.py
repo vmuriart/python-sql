@@ -32,10 +32,10 @@
 from collections import defaultdict
 from threading import currentThread, local
 
-from sql._compat import text_type, map, zip
+from sql._compat import text_type, map
 from sql.utils import csv_str, csv_map, alias
 
-__all__ = ('Flavor', 'Table', 'Values', 'Literal', 'Column', 'Join',
+__all__ = ('Flavor', 'Table', 'Literal', 'Column', 'Join',
            'Asc', 'Desc', 'NullsFirst', 'NullsLast')
 
 
@@ -218,23 +218,6 @@ class FromItem(object):
     def join(self, right, type_='INNER', condition=None):
         return Join(self, right, type_=type_, condition=condition)
 
-    def lateral(self):
-        return Lateral(self)
-
-
-class Lateral(FromItem):
-    __slots__ = ('_from_item',)
-
-    def __init__(self, from_item):
-        self._from_item = from_item
-
-    def __str__(self):
-        template = '(%s)' if isinstance(self._from_item, Query) else '%s'
-        return 'LATERAL ' + template % self._from_item
-
-    def __getattr__(self, name):
-        return getattr(self._from_item, name)
-
 
 class With(FromItem):
     __slots__ = ('columns', 'query', 'recursive')
@@ -334,7 +317,7 @@ class Select(FromItem, SelectQuery):
     __slots__ = ('_columns', 'where', '_group_by', 'having', '_for_', 'from_')
 
     def __init__(self, columns, from_=None, where=None, group_by=None,
-                 having=None, for_=None, **kwargs):
+                 having=None, **kwargs):
         # TODO ALL|DISTINCT
         super(Select, self).__init__(**kwargs)
 
@@ -343,9 +326,6 @@ class Select(FromItem, SelectQuery):
 
         self._group_by = None
         self.group_by = group_by
-
-        self._for_ = None
-        self.for_ = for_
 
         self.from_ = from_
         self.where = where
@@ -366,14 +346,6 @@ class Select(FromItem, SelectQuery):
     @group_by.setter
     def group_by(self, value):
         self._group_by = [value] if isinstance(value, Expression) else value
-
-    @property
-    def for_(self):
-        return self._for_
-
-    @for_.setter
-    def for_(self, value):
-        self._for_ = [value] if isinstance(value, For) else value
 
     @staticmethod
     def _format_column(column):
@@ -428,14 +400,12 @@ class Select(FromItem, SelectQuery):
 
         self.limit, limit = None, self.limit
         self.offset, offset = None, self.offset
-        query.for_, self.for_ = self.for_, None
 
         try:
             value = func(query)
         finally:
             self.limit = limit
             self.offset = offset
-            self.for_ = query.for_
         return value
 
     def __str__(self):
@@ -463,13 +433,10 @@ class Select(FromItem, SelectQuery):
             if windows:
                 window = ' WINDOW ' + ', '.join(
                     '"{}" AS ({})'.format(w.alias, w) for w in windows)
-            for_ = ''
-            if self.for_ is not None:
-                for_ = ' ' + ' '.join(map(text_type, self.for_))
             return (self._with_str() +
                     'SELECT {} FROM {}'.format(columns, from_) +
                     where + group_by + having + window + self._order_by_str +
-                    self._limit_offset_str + for_)
+                    self._limit_offset_str)
 
     @property
     def params(self):
@@ -495,164 +462,6 @@ class Select(FromItem, SelectQuery):
             p.extend(self.having.params)
         for window_function in self._window_functions():
             p.extend(window_function.window.params)
-        return tuple(p)
-
-
-class Insert(WithQuery):
-    __slots__ = ('table', 'columns', '_values', 'returning')
-
-    def __init__(self, table, columns=None, values=None, returning=None,
-                 **kwargs):
-        super(Insert, self).__init__(**kwargs)
-        self._values = None
-        self.values = values
-
-        self.table = table
-        self.columns = columns
-        self.returning = returning
-
-    @property
-    def values(self):
-        return self._values
-
-    @values.setter
-    def values(self, value):
-        self._values = Values(value) if isinstance(value, list) else value
-
-    @staticmethod
-    def _format(value, param=None):
-        if param is None:
-            param = Flavor.get().param
-        if isinstance(value, Expression):
-            return text_type(value)
-        elif isinstance(value, Select):
-            return '({})'.format(value)
-        else:
-            return param
-
-    def __str__(self):
-        returning = values = columns = ''
-
-        if self.columns:
-            columns = ' (' + csv_str(self.columns) + ')'
-
-        # TODO manage DEFAULT
-        if isinstance(self.values, Query):
-            values = ' {}'.format(text_type(self.values))
-        elif self.values is None:
-            values = ' DEFAULT VALUES'
-
-        if self.returning:
-            returning = ' RETURNING ' + csv_str(self.returning)
-        with AliasManager():
-            return (self._with_str() + 'INSERT INTO {}'.format(self.table) +
-                    columns + values + returning)
-
-    @property
-    def params(self):
-        p = []
-        p.extend(self._with_params())
-        if isinstance(self.values, Query):
-            p.extend(self.values.params)
-        if self.returning:
-            for exp in self.returning:
-                p.extend(exp.params)
-        return tuple(p)
-
-
-class Update(Insert):
-    __slots__ = ('where', '_values', 'from_')
-
-    def __init__(self, table, columns, values, from_=None, where=None,
-                 returning=None, **kwargs):
-        super(Update, self).__init__(table, columns=columns, values=values,
-                                     returning=returning, **kwargs)
-        self.from_ = From(from_) if from_ else None
-        self.where = where
-
-    @property
-    def values(self):
-        return self._values
-
-    @values.setter
-    def values(self, value):
-        self._values = [value] if isinstance(value, Select) else value
-
-    def __str__(self):
-        # Get columns without alias
-        columns = list(map(text_type, self.columns))
-
-        with AliasManager():
-            from_ = ''
-            if self.from_:
-                table = From([self.table])
-                from_ = ' FROM {}'.format(text_type(self.from_))
-            else:
-                table = self.table
-                AliasManager.set(table, text_type(table)[1:-1])
-            values = ', '.join('{} = {}'.format(c, self._format(v))
-                               for c, v in zip(columns, self.values))
-            where = ''
-            if self.where:
-                where = ' WHERE ' + text_type(self.where)
-            returning = ''
-            if self.returning:
-                returning = ' RETURNING ' + csv_str(self.returning)
-            return (self._with_str() + 'UPDATE {} SET '.format(table) +
-                    values + from_ + where + returning)
-
-    @property
-    def params(self):
-        p = []
-        p.extend(self._with_params())
-        for value in self.values:
-            if isinstance(value, (Expression, Select)):
-                p.extend(value.params)
-            else:
-                p.append(value)
-        if self.from_:
-            p.extend(self.from_.params)
-        if self.where:
-            p.extend(self.where.params)
-        if self.returning:
-            for exp in self.returning:
-                p.extend(exp.params)
-        return tuple(p)
-
-
-class Delete(WithQuery):
-    __slots__ = ('table', 'where', 'returning', 'only')
-
-    def __init__(self, table, only=False, where=None, returning=None,
-                 **kwargs):
-        # TODO using (not standard)
-        super(Delete, self).__init__(**kwargs)
-        self.table = table
-        self.only = only
-        self.where = where
-        self.returning = returning
-
-    def __str__(self):
-        with AliasManager(exclude=[self.table]):
-            only = ' ONLY' if self.only else ''
-            where = ''
-            if self.where:
-                where = ' WHERE ' + text_type(self.where)
-            returning = ''
-            if self.returning:
-                returning = ' RETURNING ' + csv_str(self.returning)
-            return self._with_str() + 'DELETE FROM{} {}'.format(
-                only, self.table) + where + returning
-
-    @property
-    def params(self):
-        p = []
-        p.extend(self._with_params())
-        if self.where:
-            p.extend(self.where.params)
-        if self.returning:
-            for exp in self.returning:
-                p.extend(exp.params)
         return tuple(p)
 
 
@@ -719,15 +528,6 @@ class Table(FromItem):
     @property
     def params(self):
         return tuple()
-
-    def insert(self, *args, **kwargs):
-        return Insert(self, *args, **kwargs)
-
-    def update(self, *args, **kwargs):
-        return Update(self, *args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        return Delete(self, *args, **kwargs)
 
 
 class Join(FromItem):
@@ -818,35 +618,6 @@ class From(list):
 
     def __add__(self, other):
         return From(super(From, self).__add__([other]))
-
-
-class Values(list, Query, FromItem):
-    __slots__ = ()
-
-    # TODO order, fetch
-
-    def __str__(self):
-        param = Flavor.get().param
-
-        def format_(value):
-            if isinstance(value, Expression):
-                return text_type(value)
-            else:
-                return param
-
-        return 'VALUES ' + ', '.join(
-            '({})'.format(csv_map(format_, v)) for v in self)
-
-    @property
-    def params(self):
-        p = []
-        for values in self:
-            for value in values:
-                if isinstance(value, Expression):
-                    p.extend(value.params)
-                else:
-                    p.append(value)
-        return tuple(p)
 
 
 class Expression(object):
@@ -1149,7 +920,6 @@ class Order(Expression):
     def __init__(self, expression):
         super(Order, self).__init__()
         self.expression = expression
-        # TODO USING
 
     def __str__(self):
         if isinstance(self.expression, SelectQuery):
@@ -1221,40 +991,6 @@ class NullsLast(NullOrder):
 
     def _case_values(self):
         return 1, 0
-
-
-class For(object):
-    __slots__ = ('_tables', '_type_', 'nowait')
-
-    def __init__(self, type_, *tables, **kwargs):
-        self._tables = None
-        self.tables = list(tables)
-
-        self._type_ = None
-        self.type_ = type_
-
-        self.nowait = kwargs.get('nowait')
-
-    @property
-    def tables(self):
-        return self._tables
-
-    @tables.setter
-    def tables(self, value):
-        self._tables = value if isinstance(value, list) else [value]
-
-    @property
-    def type_(self):
-        return self._type_
-
-    @type_.setter
-    def type_(self, value):
-        self._type_ = value.upper()
-
-    def __str__(self):
-        tables = (' OF ' + csv_str(self.tables)) if self.tables else ''
-        nowait = ' NOWAIT' if self.nowait else ''
-        return 'FOR {}'.format(self.type_) + tables + nowait
 
 
 Null = None
